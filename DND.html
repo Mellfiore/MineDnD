@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D&D: Morgland</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --dark-bg: #1A1A1A;
+    --dark-panel: #2C2C2C;
+    --accent-blue: #007BFF;
+    --accent-red: #FF4C4C;
+    --text-white: #FFFFFF;
+    --text-gray: #A9A9A9;
+    --progress-bg: #4A4A4A;
+    --progress-fill: #32CD32;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: 'Noto Sans', sans-serif;
+    background-color: var(--dark-bg);
+    color: var(--text-white);
+    overflow-x: hidden;
+  }
+  header {
+    padding: 12px;
+    background: var(--dark-panel);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 100%;
+  }
+  header h1 {
+    margin: 4px 0;
+    font-size: 20pt;
+  }
+  header .sub {
+    font-size: 12pt;
+    color: var(--text-gray);
+  }
+  nav {
+    display: flex;
+    justify-content: space-around;
+    background: var(--dark-panel);
+    padding: 8px 0;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    z-index: 100;
+    height: 60px;
+  }
+  nav button {
+    background: none;
+    border: none;
+    color: var(--text-white);
+    font-size: 14pt;
+    cursor: pointer;
+  }
+  nav button.active {
+    border-bottom: 2px solid var(--accent-blue);
+  }
+  .tab {
+    display: none;
+    padding: 12px;
+    padding-bottom: 80px;
+    max-width: 100%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .active-tab {
+    display: block;
+    opacity: 1;
+  }
+  .abilities {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-areas: 
+      "str int"
+      "dex wis"
+      "con cha";
+    gap: 8px;
+    margin-top: 12px;
+    max-width: 100%;
+  }
+  .ability-card:nth-child(1) { grid-area: str; }
+  .ability-card:nth-child(2) { grid-area: dex; }
+  .ability-card:nth-child(3) { grid-area: con; }
+  .ability-card:nth-child(4) { grid-area: int; }
+  .ability-card:nth-child(5) { grid-area: wis; }
+  .ability-card:nth-child(6) { grid-area: cha; }
+  .skills, .spell-slots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+    max-width: 100%;
+  }
+  .ability-card, .skill-item, .spell-slot-item {
+    background: var(--dark-panel);
+    padding: 8px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .ability-card label, .skill-item label, .spell-slot-item label {
+    display: block;
+    margin-bottom: 4px;
+  }
+  .ability-card input, .spell-slot-item input, .xp input {
+    width: 40px;
+    font-size: 16pt;
+    text-align: center;
+    background: var(--dark-bg);
+    color: var(--text-white);
+    border: 1px solid var(--text-gray);
+    border-radius: 4px;
+  }
+  .ability-card span, .skill-item span, .spell-slot-item span {
+    display: block;
+    font-size: 12pt;
+    color: var(--text-gray);
+  }
+  .skill-item {
+    display: flex;
+    align-items: center;
+  }
+  .skill-item input {
+    margin-right: 8px;
+  }
+  .dice-row {
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+  .dice-button {
+    background: var(--accent-blue);
+    color: var(--text-white);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    margin: 4px;
+    font-weight: bold;
+    font-size: 14pt;
+    cursor: pointer;
+  }
+  .inventory-item, .spell-item {
+    background: var(--dark-panel);
+    padding: 8px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .inventory-item span, .spell-item span {
+    flex: 1;
+  }
+  .inventory-item button, .spell-item button {
+    margin-left: 4px;
+    background: var(--accent-red);
+    border: none;
+    color: var(--text-white);
+    border-radius: 4px;
+    padding: 2px 6px;
+    cursor: pointer;
+  }
+  .inventory-form input, .inventory-form select, .spells-form input, .spells-form select {
+    margin-bottom: 6px;
+    width: 100%;
+    padding: 6px;
+    border-radius: 4px;
+    border: 1px solid var(--text-gray);
+    background: var(--dark-bg);
+    color: var(--text-white);
+  }
+  .notes textarea, .spells-form textarea {
+    width: 100%;
+    height: 200px;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--text-gray);
+    background: var(--dark-bg);
+    color: var(--text-white);
+  }
+  .settings button {
+    width: 48%;
+    margin: 4px 1%;
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    background: var(--accent-blue);
+    color: var(--text-white);
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .avatar-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    margin: 8px auto;
+    border: 2px solid var(--accent-blue);
+  }
+  .stats {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .xp {
+    margin-top: 12px;
+    max-width: 100%;
+  }
+  .xp label {
+    display: block;
+    margin-bottom: 4px;
+  }
+  .progress-bar {
+    width: 100%;
+    background: var(--progress-bg);
+    border-radius: 4px;
+    height: 20px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--progress-fill);
+    transition: width 0.3s ease;
+  }
+  .stats input, .xp input {
+    width: 60px;
+    padding: 6px;
+    background: var(--dark-bg);
+    color: var(--text-white);
+    border: 1px solid var(--text-gray);
+    border-radius: 4px;
+  }
+  .xp button {
+    margin-top: 8px;
+    background: var(--accent-blue);
+    color: var(--text-white);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .inventory-tabs {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 12px;
+  }
+  .inventory-tabs button {
+    background: none;
+    border: none;
+    color: var(--text-white);
+    font-size: 12pt;
+    cursor: pointer;
+    padding: 6px;
+  }
+  .inventory-tabs button.active {
+    border-bottom: 2px solid var(--accent-blue);
+  }
+  .inventory-content {
+    display: none;
+  }
+  .inventory-content.active {
+    display: block;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+  .inventory-form .dynamic-field, .spells-form .dynamic-field {
+    display: none;
+  }
+  .inventory-form .dynamic-field.active, .spells-form .dynamic-field.active {
+    display: block;
+  }
+  .inventory-item input[type="checkbox"] {
+    margin-left: 8px;
+  }
+  @media (max-width: 500px) {
+    .abilities {
+      grid-template-columns: 1fr !important;
+      grid-template-areas: none;
+    }
+  }
+  @media (max-width: 600px) {
+    .skills, .spell-slots {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .dice-button {
+      width: 40px;
+      height: 40px;
+      font-size: 12pt;
+    }
+    header h1 {
+      font-size: 16pt;
+    }
+    header .sub {
+      font-size: 10pt;
+    }
+    .tab {
+      padding: 8px;
+      padding-bottom: 70px;
+    }
+  }
+  @media (max-width: 400px) {
+    .skills, .spell-slots {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body onload="loadFromLocalStorage()">
+
+<header>
+  <div class="avatar-preview" id="avatarPreview" role="img" aria-label="Персонаж"></div>
+  <label for="avatarInput" class="sr-only">Загрузить аватар</label>
+  <input type="file" id="avatarInput" accept="image/*">
+  <h1 contenteditable="true" id="charName" oninput="limitContentLength('charName', 50); saveToLocalStorage()">Mell</h1>
+  <div class="sub">
+    Раса: <span contenteditable="true" id="charRace" oninput="limitContentLength('charRace', 30); saveToLocalStorage()">Tiefling</span> |
+    Класс: <span contenteditable="true" id="charClass" oninput="limitContentLength('charClass', 30); saveToLocalStorage()">Ranger</span> |
+    Уровень: <span contenteditable="true" id="charLevel" oninput="limitContentLength('charLevel', 3); saveToLocalStorage()">1</span>
+  </div>
+</header>
+
+<div class="tab active-tab" id="tabCharacter">
+  <h2>Характеристики</h2>
+  <div class="stats">
+    <label>Текущее HP: <input type="number" min="0" max="999" id="currentHP" value="10" oninput="validateHP(); saveToLocalStorage()"></label>
+    <label>Макс. HP: <input type="number" min="0" max="999" id="maxHP" value="10" oninput="validateHP(); saveToLocalStorage()"></label>
+    <label>AC: <input type="number" min="0" max="50" id="ac" value="15" readonly></label>
+    <label>Proficiency Bonus: <input type="number" min="2" max="6" id="profBonus" value="2" readonly></label>
+  </div>
+  <h2>Опыт</h2>
+  <div class="xp">
+    <label for="xpCurrent">Текущий XP</label>
+    <input type="number" min="0" id="xpCurrent" value="0" oninput="updateXP(); saveToLocalStorage()">
+    <label for="xpNext">XP до следующего уровня</label>
+    <input type="number" min="0" id="xpNext" value="300" readonly>
+    <div class="progress-bar">
+      <div class="progress-fill" id="xpProgress" style="width:0%"></div>
+    </div>
+    <button onclick="addXP()">Добавить XP</button>
+    <button onclick="levelUp()">Повысить уровень</button>
+  </div>
+  <h2>Способности</h2>
+  <div class="abilities" id="abilitiesContainer">
+    <div class="ability-card">
+      <label for="str">Сила</label>
+      <input type="number" min="1" max="30" value="8" id="str" oninput="updateModifier('str'); updateSkills(); updateAC(); saveToLocalStorage()">
+      <span id="strMod">Mod: -1</span>
+    </div>
+    <div class="ability-card">
+      <label for="dex">Ловкость</label>
+      <input type="number" min="1" max="30" value="14" id="dex" oninput="updateModifier('dex'); updateSkills(); updateAC(); saveToLocalStorage()">
+      <span id="dexMod">Mod: +2</span>
+    </div>
+    <div class="ability-card">
+      <label for="con">Телосложение</label>
+      <input type="number" min="1" max="30" value="12" id="con" oninput="updateModifier('con'); updateSkills(); saveToLocalStorage()">
+      <span id="conMod">Mod: +1</span>
+    </div>
+    <div class="ability-card">
+      <label for="int">Интеллект</label>
+      <input type="number" min="1" max="30" value="11" id="int" oninput="updateModifier('int'); updateSkills(); saveToLocalStorage()">
+      <span id="intMod">Mod: +0</span>
+    </div>
+    <div class="ability-card">
+      <label for="wis">Мудрость</label>
+      <input type="number" min="1" max="30" value="13" id="wis" oninput="updateModifier('wis'); updateSkills(); saveToLocalStorage()">
+      <span id="wisMod">Mod: +1</span>
+    </div>
+    <div class="ability-card">
+      <label for="cha">Харизма</label>
+      <input type="number" min="1" max="30" value="16" id="cha" oninput="updateModifier('cha'); updateSkills(); saveToLocalStorage()">
+      <span id="chaMod">Mod: +3</span>
+    </div>
+  </div>
+  <h2>Броски кубиков</h2>
+  <select id="diceAbility">
+    <option value="none">Без модификатора</option>
+    <option value="str">Проверка Силы</option>
+    <option value="dex">Проверка Ловкости</option>
+    <option value="con">Проверка Телосложения</option>
+    <option value="int">Проверка Интеллекта</option>
+    <option value="wis">Проверка Мудрости</option>
+    <option value="cha">Проверка Харизмы</option>
+    <option value="athletics">Атлетика</option>
+    <option value="acrobatics">Акробатика</option>
+    <option value="sleightOfHand">Ловкость рук</option>
+    <option value="stealth">Скрытность</option>
+    <option value="arcana">Магия</option>
+    <option value="history">История</option>
+    <option value="investigation">Расследование</option>
+    <option value="nature">Природа</option>
+    <option value="religion">Религия</option>
+    <option value="animalHandling">Обращение с животными</option>
+    <option value="insight">Проницательность</option>
+    <option value="medicine">Медицина</option>
+    <option value="perception">Восприятие</option>
+    <option value="survival">Выживание</option>
+    <option value="deception">Обман</option>
+    <option value="intimidation">Запугивание</option>
+    <option value="performance">Выступление</option>
+    <option value="persuasion">Убеждение</option>
+  </select>
+  <div class="dice-row">
+    <button class="dice-button" data-dice="4">D4</button>
+    <button class="dice-button" data-dice="6">D6</button>
+    <button class="dice-button" data-dice="8">D8</button>
+    <button class="dice-button" data-dice="10">D10</button>
+    <button class="dice-button" data-dice="12">D12</button>
+    <button class="dice-button" data-dice="20">D20</button>
+    <button class="dice-button" data-dice="100">D100</button>
+  </div>
+  <div id="diceResult" style="margin-top:12px;text-align:center;font-size:16pt;white-space:pre-wrap;"></div>
+</div>
+
+<div class="tab" id="tabSkills">
+  <h2>Навыки</h2>
+  <div class="skills" id="skillsContainer">
+    <div class="skill-item">
+      <input type="checkbox" id="athleticsProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="athleticsProf">Атлетика (Сила)</label>
+      <span id="athleticsBonus">+0</span>
+    </div>
+    <div class="skill-item">
+      <input type="checkbox" id="acrobaticsProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="acrobaticsProf">Акробатика (Ловкость)</label>
+      <span id="acrobaticsBonus">+0</span>
+    </div>
+    <div class="skill-item">
+      <input type="checkbox" id="sleightOfHandProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="sleightOfHandProf">Ловкость рук (Ловкость)</label>
+      <span id="sleightOfHandBonus">+0</span>
+    </div>
+    <div class="skill-item">
+      <input type="checkbox" id="stealthProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="stealthProf">Скрытность (Ловкость)</label>
+      <span id="stealthBonus">+0</span>
+    </div>
+    <div class="skill-item">
+      <input type="checkbox" id="arcanaProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="arcanaProf">Магия (Интеллект)</label>
+      <span id="arcanaBonus">+0</span>
+    </div>
+    <div class="skill-item">
+      <input type="checkbox" id="historyProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="historyProf">История (Интеллект)</label>
+      <span id="historyBonus">+0</span>
+    </div>
+    <div class="skill-item">
+      <input type="checkbox" id="investigationProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="investigationProf">Расследование (Интеллект)</label>
+      <span id="investigationBonus">+0</span>
+    </div>
+    <div class="skill-item">
+      <input type="checkbox" id="natureProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="natureProf">Природа (Интеллект)</label>
+      <span id="natureBonus">+0</span>
+    </div>
+    <div class="skill-item">
+      <input type="checkbox" id="religionProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="religionProf">Религия (Интеллект)</label>
+      <span id="religionBonus">+0</span>
+    </div>
+    <div class="skill-item">
+      <input type="checkbox" id="animalHandlingProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="animalHandlingProf">Обращение с животными (Мудрость)</label>
+      <span id="animalHandlingBonus">+0</span>
+    </div>
+    <div class="skill-item">
+      <input type="checkbox" id="insightProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="insightProf">Проницательность (Мудрость)</label>
+      <span id="insightBonus">+0</span>
+    </div>
+    <div class="skill-item">
+      <input type="checkbox" id="medicineProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="medicineProf">Медицина (Мудрость)</label>
+      <span id="medicineBonus">+0</span>
+    </div>
+    <div class="skill-item">
+      <input type="checkbox" id="perceptionProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="perceptionProf">Восприятие (Мудрость)</label>
+      <span id="perceptionBonus">+0</span>
+    </div>
+    <div class="skill-item">
+      <input type="checkbox" id="survivalProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="survivalProf">Выживание (Мудрость)</label>
+      <span id="survivalBonus">+0</span>
+    </div>
+    <div class="skill-item">
+      <input type="checkbox" id="deceptionProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="deceptionProf">Обман (Харизма)</label>
+      <span id="deceptionBonus">+0</span>
+    </div>
+    <div class="skill-item">
+      <input type="checkbox" id="intimidationProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="intimidationProf">Запугивание (Харизма)</label>
+      <span id="intimidationBonus">+0</span>
+    </div>
+    <div class="skill-item">
+      <input type="checkbox" id="performanceProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="performanceProf">Выступление (Харизма)</label>
+      <span id="performanceBonus">+0</span>
+    </div>
+    <div class="skill-item">
+      <input type="checkbox" id="persuasionProf" onchange="updateSkills(); saveToLocalStorage()">
+      <label for="persuasionProf">Убеждение (Харизма)</label>
+      <span id="persuasionBonus">+0</span>
+    </div>
+  </div>
+</div>
+
+<div class="tab" id="tabInventory">
+  <h2>Инвентарь</h2>
+  <div class="inventory-tabs">
+    <button onclick="showInventoryTab('weapon')" class="inventory-tab-btn active">Оружие</button>
+    <button onclick="showInventoryTab('armor')" class="inventory-tab-btn">Броня</button>
+    <button onclick="showInventoryTab('material')" class="inventory-tab-btn">Материалы</button>
+    <button onclick="showInventoryTab('misc')" class="inventory-tab-btn">Прочее</button>
+    <button onclick="showInventoryTab('equipped')" class="inventory-tab-btn">Экипированное</button>
+  </div>
+  <div class="inventory-form">
+    <label for="itemName">Название предмета</label>
+    <input type="text" id="itemName" placeholder="Название предмета" maxlength="50">
+    <label for="itemType">Тип предмета</label>
+    <select id="itemType" onchange="updateInventoryForm()">
+      <option value="weapon">Оружие</option>
+      <option value="armor">Броня</option>
+      <option value="material">Материал</option>
+      <option value="food">Продовольствие</option>
+      <option value="accessory">Аксессуар</option>
+      <option value="misc">Разное</option>
+    </select>
+    <label for="weaponSubType" class="dynamic-field" id="weaponSubTypeField">Тип оружия</label>
+    <select id="weaponSubType" class="dynamic-field">
+      <option value="dagger">Кинжал</option>
+      <option value="shortsword">Короткий меч</option>
+      <option value="longsword">Длинный меч</option>
+      <option value="greatsword">Двуручный меч</option>
+      <option value="bow">Лук</option>
+      <option value="crossbow">Арбалет</option>
+      <option value="staff">Посох</option>
+      <option value="mace">Булава</option>
+      <option value="axe">Топор</option>
+      <option value="spear">Копьё</option>
+    </select>
+    <label for="weaponCategory" class="dynamic-field" id="weaponCategoryField">Категория оружия</label>
+    <select id="weaponCategory" class="dynamic-field">
+      <option value="melee">Ближний бой</option>
+      <option value="ranged">Дальний бой</option>
+      <option value="magic">Магическое</option>
+    </select>
+    <label for="armorSubType" class="dynamic-field" id="armorSubTypeField">Тип брони</label>
+    <select id="armorSubType" class="dynamic-field">
+      <option value="leather">Кожаная броня</option>
+      <option value="chainmail">Кольчуга</option>
+      <option value="plate">Латная броня</option>
+      <option value="shield">Щит</option>
+    </select>
+    <label for="armorMaterial" class="dynamic-field" id="armorMaterialField">Материал брони</label>
+    <select id="armorMaterial" class="dynamic-field">
+      <option value="leather">Кожа</option>
+      <option value="studdedLeather">Укреплённая кожа</option>
+      <option value="steel">Сталь</option>
+      <option value="mithral">Мифрил</option>
+      <option value="adamantine">Адамантин</option>
+      <option value="dragonScale">Драконья чешуя</option>
+    </select>
+    <label for="itemQuality" class="dynamic-field" id="itemQualityField">Качество</label>
+    <select id="itemQuality" class="dynamic-field">
+      <option value="common">Обычное</option>
+      <option value="improved">Улучшенное</option>
+      <option value="masterwork">Мастерское</option>
+      <option value="magic1">Магическое +1</option>
+      <option value="magic2">Магическое +2</option>
+      <option value="magic3">Магическое +3</option>
+    </select>
+    <label for="foodSubType" class="dynamic-field" id="foodSubTypeField">Тип продовольствия</label>
+    <select id="foodSubType" class="dynamic-field">
+      <option value="food">Еда</option>
+      <option value="water">Вода</option>
+    </select>
+    <label for="accessorySubType" class="dynamic-field" id="accessorySubTypeField">Тип аксессуара</label>
+    <select id="accessorySubType" class="dynamic-field">
+      <option value="necklace">Ожерелье</option>
+      <option value="ring">Кольцо</option>
+      <option value="bracelet">Браслет</option>
+      <option value="earrings">Серьги</option>
+      <option value="cloak">Плащ</option>
+    </select>
+    <label for="acBonus" class="dynamic-field" id="acBonusField">Дополнительный бонус AC</label>
+    <input type="number" min="0" max="3" id="acBonus" class="dynamic-field" placeholder="Бонус AC">
+    <label for="energy" class="dynamic-field" id="energyField">Энергия (восстановление HP)</label>
+    <input type="number" min="0" max="100" id="energy" class="dynamic-field" placeholder="Энергия">
+    <label for="quantity" class="dynamic-field" id="quantityField">Количество</label>
+    <input type="number" min="0" max="999" id="quantity" class="dynamic-field" placeholder="Количество">
+    <label for="magicEffect" class="dynamic-field" id="magicEffectField">Магический эффект</label>
+    <input type="text" id="magicEffect" class="dynamic-field" placeholder="Магический эффект" maxlength="100">
+    <label for="itemDesc">Описание</label>
+    <textarea id="itemDesc" placeholder="Описание" maxlength="200"></textarea>
+    <button id="addItemBtn">Добавить предмет</button>
+  </div>
+  <div class="inventory-content active" id="inventoryWeapon"></div>
+  <div class="inventory-content" id="inventoryArmor"></div>
+  <div class="inventory-content" id="inventoryMaterial"></div>
+  <div class="inventory-content" id="inventoryMisc"></div>
+  <div class="inventory-content" id="inventoryEquipped"></div>
+</div>
+
+<div class="tab" id="tabSpells">
+  <h2>Заклинания</h2>
+  <div class="spells-form">
+    <label for="spellName">Название заклинания</label>
+    <input type="text" id="spellName" placeholder="Название заклинания" maxlength="50">
+    <label for="spellLevel">Уровень заклинания</label>
+    <select id="spellLevel">
+      <option value="0">Кантрип</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+    </select>
+    <label for="spellCastingTime">Время произнесения</label>
+    <input type="text" id="spellCastingTime" placeholder="Время произнесения" maxlength="50">
+    <label for="spellRange">Дальность</label>
+    <input type="text" id="spellRange" placeholder="Дальность" maxlength="50">
+    <label for="spellDesc">Описание</label>
+    <textarea id="spellDesc" placeholder="Описание" maxlength="200"></textarea>
+    <button id="addSpellBtn">Добавить заклинание</button>
+  </div>
+  <h2>Слоты заклинаний</h2>
+  <div class="spell-slots" id="spellSlotsContainer">
+    <div class="spell-slot-item">
+      <label for="slot1">1 уровень</label>
+      <input type="number" min="0" max="4" id="slot1" value="0" oninput="saveToLocalStorage()">
+    </div>
+    <div class="spell-slot-item">
+      <label for="slot2">2 уровень</label>
+      <input type="number" min="0" max="3" id="slot2" value="0" oninput="saveToLocalStorage()">
+    </div>
+    <div class="spell-slot-item">
+      <label for="slot3">3 уровень</label>
+      <input type="number" min="0" max="3" id="slot3" value="0" oninput="saveToLocalStorage()">
+    </div>
+    <div class="spell-slot-item">
+      <label for="slot4">4 уровень</label>
+      <input type="number" min="0" max="3" id="slot4" value="0" oninput="saveToLocalStorage()">
+    </div>
+    <div class="spell-slot-item">
+      <label for="slot5">5 уровень</label>
+      <input type="number" min="0" max="3" id="slot5" value="0" oninput="saveToLocalStorage()">
+    </div>
+    <div class="spell-slot-item">
+      <label for="slot6">6 уровень</label>
+      <input type="number" min="0" max="2" id="slot6" value="0" oninput="saveToLocalStorage()">
+    </div>
+    <div class="spell-slot-item">
+      <label for="slot7">7 уровень</label>
+      <input type="number" min="0" max="2" id="slot7" value="0" oninput="saveToLocalStorage()">
+    </div>
+    <div class="spell-slot-item">
+      <label for="slot8">8 уровень</label>
+      <input type="number" min="0" max="1" id="slot8" value="0" oninput="saveToLocalStorage()">
+    </div>
+    <div class="spell-slot-item">
+      <label for="slot9">9 уровень</label>
+      <input type="number" min="0" max="1" id="slot9" value="0" oninput="saveToLocalStorage()">
+    </div>
+  </div>
+  <div id="spellList"></div>
+</div>
+
+<div class="tab notes" id="tabNotes">
+  <h2>Заметки</h2>
+  <label for="notesArea">Заметки</label>
+  <textarea id="notesArea" oninput="saveToLocalStorage()"></textarea>
+</div>
+
+<div class="tab settings" id="tabSettings">
+  <h2>Настройки</h2>
+  <button id="exportBtn">Экспорт JSON</button>
+  <button id="importBtn">Импорт JSON</button>
+  <button onclick="clearLocalStorage()">Сброс данных</button>
+  <input type="file" id="importInput" style="display:none;" accept=".json">
+  <label for="fileInput" class="sr-only">Загрузить Excel</label>
+  <input type="file" id="fileInput" accept=".xlsx" onchange="handleFileUpload(event)">
+</div>
+
+<nav>
+  <button onclick="showTab('tabCharacter')" class="nav-btn active">Персонаж</button>
+  <button onclick="showTab('tabSkills')" class="nav-btn">Навыки</button>
+  <button onclick="showTab('tabInventory')" class="nav-btn">Инвентарь</button>
+  <button onclick="showTab('tabSpells')" class="nav-btn">Заклинания</button>
+  <button onclick="showTab('tabNotes')" class="nav-btn">Заметки</button>
+  <button onclick="showTab('tabSettings')" class="nav-btn">Настройки</button>
+</nav>
+
+<script>
+var gk_isXlsx = false;
+var gk_xlsxFileLookup = {};
+var gk_fileData = {};
+
+function filledCell(cell) {
+  return cell !== '' && cell != null;
+}
+
+function loadFileData(filename) {
+  if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+    try {
+      var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+      var firstSheetName = workbook.SheetNames[0];
+      var worksheet = workbook.Sheets[firstSheetName];
+      var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+      var filteredData = jsonData.filter(row => row.some(filledCell));
+      var headerRowIndex = filteredData.findIndex((row, index) =>
+        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+      );
+      if (headerRowIndex === -1 || headerRowIndex > 25) {
+        headerRowIndex = 0;
+      }
+      var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+      csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+      return csv;
+    } catch (e) {
+      console.error(e);
+      return "";
+    }
+  }
+  return gk_fileData[filename] || "";
+}
+
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const data = e.target.result;
+      gk_fileData[file.name] = data.split(',')[1]; // Base64 часть
+      gk_xlsxFileLookup[file.name] = true;
+      gk_isXlsx = true;
+      console.log('Файл загружен:', file.name);
+      // Здесь можно добавить дополнительную обработку, если нужно
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+// Tab switching
+function showTab(tabId) {
+  console.log('Switching to tab:', tabId);
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active-tab'));
+  document.getElementById(tabId).classList.add('active-tab');
+  document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelector(`button[onclick="showTab('${tabId}')"]`).classList.add('active');
+}
+
+// Inventory tab switching
+function showInventoryTab(tabId) {
+  document.querySelectorAll('.inventory-content').forEach(content => content.classList.remove('active'));
+  document.getElementById(`inventory${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`).classList.add('active');
+  document.querySelectorAll('.inventory-tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelector(`button[onclick="showInventoryTab('${tabId}')"]`).classList.add('active');
+  renderInventory();
+}
+
+// Limit contenteditable length
+function limitContentLength(id, maxLength) {
+  const element = document.getElementById(id);
+  if (element.textContent.length > maxLength) {
+    element.textContent = element.textContent.slice(0, maxLength);
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(element);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+}
+
+// Validate HP
+function validateHP() {
+  const currentHP = parseInt(document.getElementById('currentHP').value) || 0;
+  const maxHP = parseInt(document.getElementById('maxHP').value) || 0;
+  <!-- Продолжение от // Validate HP -->
+  if (currentHP > maxHP) {
+    document.getElementById('currentHP').value = maxHP;
+  }
+  if (currentHP < 0) {
+    document.getElementById('currentHP').value = 0;
+  }
+}
+
+// Experience and Level
+const levelXP = [0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000, 85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000];
+function updateXP() {
+  const currentXP = parseInt(document.getElementById('xpCurrent').value) || 0;
+  const level = parseInt(document.getElementById('charLevel').textContent) || 1;
+  const nextLevelXP = levelXP[Math.min(level, 19)] || 355000;
+  document.getElementById('xpNext').value = nextLevelXP;
+  const progressPercent = Math.min((currentXP / nextLevelXP) * 100, 100);
+  document.getElementById('xpProgress').style.width = `${progressPercent}%`;
+  if (currentXP >= nextLevelXP && level < 20) {
+    document.getElementById('charLevel').textContent = level + 1;
+    document.getElementById('profBonus').value = Math.floor((level + 1 - 1) / 4) + 2;
+    updateSkills();
+    saveToLocalStorage();
+  }
+}
+function addXP() {
+  const xpInput = prompt('Введите количество XP для добавления:');
+  const xpToAdd = parseInt(xpInput) || 0;
+  if (xpToAdd > 0) {
+    const currentXP = parseInt(document.getElementById('xpCurrent').value) || 0;
+    document.getElementById('xpCurrent').value = currentXP + xpToAdd;
+    updateXP();
+    saveToLocalStorage();
+  }
+}
+function levelUp() {
+  const level = parseInt(document.getElementById('charLevel').textContent) || 1;
+  if (level < 20) {
+    document.getElementById('charLevel').textContent = level + 1;
+    document.getElementById('profBonus').value = Math.floor((level + 1 - 1) / 4) + 2;
+    document.getElementById('xpCurrent').value = levelXP[level] || 0;
+    updateXP();
+    updateSkills();
+    saveToLocalStorage();
+  } else {
+    alert('Достигнут максимальный уровень (20)!');
+  }
+}
+
+// Calculate ability modifier
+function updateModifier(stat) {
+  const value = parseInt(document.getElementById(stat).value) || 10;
+  const mod = Math.floor((value - 10) / 2);
+  document.getElementById(`${stat}Mod`).textContent = `Mod: ${mod >= 0 ? '+' : ''}${mod}`;
+}
+
+// Update AC
+const armorBaseAC = {
+  leather: 11,
+  chainmail: 16,
+  plate: 18,
+  shield: 2
+};
+const materialModifiers = {
+  leather: 0,
+  studdedLeather: 1,
+  steel: 0,
+  mithral: 1,
+  adamantine: 1,
+  dragonScale: 2
+};
+const qualityModifiers = {
+  common: 0,
+  improved: 1,
+  masterwork: 2,
+  magic1: 1,
+  magic2: 2,
+  magic3: 3
+};
+function updateAC() {
+  const dexValue = parseInt(document.getElementById('dex').value) || 10;
+  const dexMod = Math.floor((dexValue - 10) / 2);
+  let totalAC = 10;
+  let hasArmor = false;
+  let hasShield = false;
+  inventory.forEach(item => {
+    if (item.type === 'armor' && item.equipped) {
+      const baseAC = armorBaseAC[item.subType] || 10;
+      const materialBonus = materialModifiers[item.material] || 0;
+      const qualityBonus = qualityModifiers[item.quality] || 0;
+      const extraBonus = parseInt(item.acBonus) || 0;
+      if (item.subType === 'leather') {
+        totalAC = Math.max(totalAC, baseAC + dexMod + materialBonus + qualityBonus + extraBonus);
+        hasArmor = true;
+      } else if (item.subType === 'chainmail') {
+        totalAC = Math.max(totalAC, baseAC + Math.min(dexMod, 2) + materialBonus + qualityBonus + extraBonus);
+        hasArmor = true;
+      } else if (item.subType === 'plate') {
+        totalAC = Math.max(totalAC, baseAC + materialBonus + qualityBonus + extraBonus);
+        hasArmor = true;
+      } else if (item.subType === 'shield') {
+        totalAC += baseAC + materialBonus + qualityBonus + extraBonus;
+        hasShield = true;
+      }
+    }
+  });
+  if (!hasArmor) {
+    totalAC = 10 + dexMod;
+  }
+  document.getElementById('ac').value = totalAC;
+}
+
+// Update skills
+const skillMap = {
+  athletics: { ability: 'str', bonusId: 'athleticsBonus', profId: 'athleticsProf' },
+  acrobatics: { ability: 'dex', bonusId: 'acrobaticsBonus', profId: 'acrobaticsProf' },
+  sleightOfHand: { ability: 'dex', bonusId: 'sleightOfHandBonus', profId: 'sleightOfHandProf' },
+  stealth: { ability: 'dex', bonusId: 'stealthBonus', profId: 'stealthProf' },
+  arcana: { ability: 'int', bonusId: 'arcanaBonus', profId: 'arcanaProf' },
+  history: { ability: 'int', bonusId: 'historyBonus', profId: 'historyProf' },
+  investigation: { ability: 'int', bonusId: 'investigationBonus', profId: 'investigationProf' },
+  nature: { ability: 'int', bonusId: 'natureBonus', profId: 'natureProf' },
+  religion: { ability: 'int', bonusId: 'religionBonus', profId: 'religionProf' },
+  animalHandling: { ability: 'wis', bonusId: 'animalHandlingBonus', profId: 'animalHandlingProf' },
+  insight: { ability: 'wis', bonusId: 'insightBonus', profId: 'insightProf' },
+  medicine: { ability: 'wis', bonusId: 'medicineBonus', profId: 'medicineProf' },
+  perception: { ability: 'wis', bonusId: 'perceptionBonus', profId: 'perceptionProf' },
+  survival: { ability: 'wis', bonusId: 'survivalBonus', profId: 'survivalProf' },
+  deception: { ability: 'cha', bonusId: 'deceptionBonus', profId: 'deceptionProf' },
+  intimidation: { ability: 'cha', bonusId: 'intimidationBonus', profId: 'intimidationProf' },
+  performance: { ability: 'cha', bonusId: 'performanceBonus', profId: 'performanceProf' },
+  persuasion: { ability: 'cha', bonusId: 'persuasionBonus', profId: 'persuasionProf' }
+};
+function updateSkills() {
+  const profBonus = parseInt(document.getElementById('profBonus').value) || 2;
+  Object.keys(skillMap).forEach(skill => {
+    const { ability, bonusId, profId } = skillMap[skill];
+    const abilityValue = parseInt(document.getElementById(ability).value) || 10;
+    const mod = Math.floor((abilityValue - 10) / 2);
+    const isProficient = document.getElementById(profId).checked;
+    const totalBonus = mod + (isProficient ? profBonus : 0);
+    document.getElementById(bonusId).textContent = `${totalBonus >= 0 ? '+' : ''}${totalBonus}`;
+  });
+}
+
+// Dice rolling
+document.querySelectorAll('.dice-button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const dice = parseInt(btn.getAttribute('data-dice'));
+    const ability = document.getElementById('diceAbility').value;
+    let modifier = 0;
+    if (ability !== 'none') {
+      if (skillMap[ability]) {
+        const { ability: stat, profId } = skillMap[ability];
+        const abilityValue = parseInt(document.getElementById(stat).value) || 10;
+        modifier = Math.floor((abilityValue - 10) / 2);
+        if (document.getElementById(profId).checked) {
+          modifier += parseInt(document.getElementById('profBonus').value) || 2;
+        }
+      } else {
+        const value = parseInt(document.getElementById(ability).value) || 10;
+        modifier = Math.floor((value - 10) / 2);
+      }
+    }
+    const result = Math.floor(Math.random() * dice) + 1 + modifier;
+    const diceResult = document.getElementById('diceResult');
+    const rollText = `${btn.textContent}${modifier ? ` + ${modifier}` : ''} = ${result}`;
+    const currentRolls = diceResult.textContent.split('\n').filter(Boolean);
+    currentRolls.unshift(rollText);
+    diceResult.textContent = currentRolls.slice(0, 5).join('\n');
+  });
+});
+
+// Avatar upload
+let avatarData = null;
+document.getElementById('avatarInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      avatarData = ev.target.result;
+      document.getElementById('avatarPreview').style.backgroundImage = `url(${avatarData})`;
+      saveToLocalStorage();
+    };
+    reader.onerror = function() {
+      alert('Ошибка загрузки изображения');
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+// Inventory
+let inventory = [];
+let editingIndex = null;
+function updateInventoryForm() {
+  const itemType = document.getElementById('itemType').value;
+  const fields = ['weaponSubTypeField', 'weaponCategoryField', 'armorSubTypeField', 'armorMaterialField', 'itemQualityField', 'foodSubTypeField', 'accessorySubTypeField', 'acBonusField', 'energyField', 'quantityField', 'magicEffectField'];
+  fields.forEach(field => document.getElementById(field)?.classList.remove('active'));
+  document.querySelectorAll('#weaponSubType, #weaponCategory, #armorSubType, #armorMaterial, #itemQuality, #foodSubType, #accessorySubType').forEach(el => el.classList.remove('active'));
+
+  if (itemType === 'weapon') {
+    document.getElementById('weaponSubTypeField').classList.add('active');
+    document.getElementById('weaponSubType').classList.add('active');
+    document.getElementById('weaponCategoryField').classList.add('active');
+    document.getElementById('weaponCategory').classList.add('active');
+    document.getElementById('itemQualityField').classList.add('active');
+    document.getElementById('itemQuality').classList.add('active');
+  } else if (itemType === 'armor') {
+    document.getElementById('armorSubTypeField').classList.add('active');
+    document.getElementById('armorSubType').classList.add('active');
+    document.getElementById('armorMaterialField').classList.add('active');
+    document.getElementById('armorMaterial').classList.add('active');
+    document.getElementById('itemQualityField').classList.add('active');
+    document.getElementById('itemQuality').classList.add('active');
+    document.getElementById('acBonusField').classList.add('active');
+  } else if (itemType === 'food') {
+    document.getElementById('foodSubTypeField').classList.add('active');
+    document.getElementById('foodSubType').classList.add('active');
+    document.getElementById('energyField').classList.add('active');
+    document.getElementById('quantityField').classList.add('active');
+  } else if (itemType === 'accessory') {
+    document.getElementById('accessorySubTypeField').classList.add('active');
+    document.getElementById('accessorySubType').classList.add('active');
+    document.getElementById('magicEffectField').classList.add('active');
+  } else if (itemType === 'material') {
+    document.getElementById('quantityField').classList.add('active');
+  }
+}
+function renderInventory() {
+  const tabs = ['weapon', 'armor', 'material', 'misc', 'equipped'];
+  tabs.forEach(tab => {
+    const list = document.getElementById(`inventory${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+    list.innerHTML = '';
+    const filteredItems = tab === 'equipped' ? 
+      inventory.filter(item => item.equipped && (item.type === 'weapon' || item.type === 'armor')) :
+      inventory.filter(item => item.type === tab || (tab === 'misc' && !['weapon', 'armor', 'material'].includes(item.type)));
+    filteredItems.forEach((item, idx) => {
+      const globalIdx = inventory.indexOf(item);
+      const div = document.createElement('div');
+      div.className = 'inventory-item';
+      let displayText = `${item.name} (${item.type}${item.subType ? `, ${item.subType}` : ''}${item.category ? `, ${item.category}` : ''}${item.material ? `, ${item.material}` : ''}${item.quality ? `, ${item.quality}` : ''})`;
+      if (item.acBonus) displayText += `, AC +${item.acBonus}`;
+      if (item.energy) displayText += `, Энергия ${item.energy}`;
+      if (item.quantity) displayText += `, Кол-во: ${item.quantity}`;
+      if (item.magicEffect) displayText += `, ${item.magicEffect}`;
+      if (item.desc) displayText += `: ${item.desc}`;
+      if (item.equipped) displayText += ` [Экипировано]`;
+      
+      const span = document.createElement('span');
+      span.textContent = displayText;
+      div.appendChild(span);
+      
+      if (item.type === 'armor' || item.type === 'weapon') {
+        const equipCheckbox = document.createElement('input');
+        equipCheckbox.type = 'checkbox';
+        equipCheckbox.checked = item.equipped || false;
+        equipCheckbox.onchange = () => {
+          if (equipCheckbox.checked) {
+            if (item.type === 'armor') {
+              const equippedArmors = inventory.filter(i => i.type === 'armor' && i.equipped && i !== item);
+              const maxArmors = item.subType === 'shield' ? 1 : 1;
+              if (equippedArmors.length >= maxArmors) {
+                alert(`Можно экипировать только ${item.subType === 'shield' ? 'один щит' : 'одну броню'}!`);
+                equipCheckbox.checked = false;
+                return;
+              }
+            } else if (item.type === 'weapon') {
+              const equippedWeapons = inventory.filter(i => i.type === 'weapon' && i.equipped && i !== item);
+              if (equippedWeapons.length >= 2) {
+                alert('Можно экипировать максимум два оружия!');
+                equipCheckbox.checked = false;
+                return;
+              }
+            }
+          }
+          item.equipped = equipCheckbox.checked;
+          updateAC();
+          renderInventory();
+          saveToLocalStorage();
+        };
+        div.appendChild(equipCheckbox);
+      }
+      
+      const editBtn = document.createElement('button');
+      editBtn.textContent = 'Редактировать';
+      editBtn.onclick = () => editItem(globalIdx);
+      div.appendChild(editBtn);
+      
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = 'X';
+      deleteBtn.onclick = () => deleteItem(globalIdx);
+      div.appendChild(deleteBtn);
+      
+      list.appendChild(div);
+    });
+  });
+}
+document.getElementById('addItemBtn').addEventListener('click', () => {
+  const name = document.getElementById('itemName').value.trim();
+  const type = document.getElementById('itemType').value;
+  let subType = '';
+  let category = '';
+  let material = '';
+  let quality = '';
+  let acBonus = 0;
+  let energy = 0;
+  let quantity = 0;
+  let magicEffect = '';
+  if (type === 'weapon') {
+    subType = document.getElementById('weaponSubType').value;
+    category = document.getElementById('weaponCategory').value;
+    quality = document.getElementById('itemQuality').value;
+  } else if (type === 'armor') {
+    subType = document.getElementById('armorSubType').value;
+    material = document.getElementById('armorMaterial').value;
+    quality = document.getElementById('itemQuality').value;
+    acBonus = Math.max(0, Math.min(3, parseInt(document.getElementById('acBonus').value) || 0));
+  } else if (type === 'food') {
+    subType = document.getElementById('foodSubType').value;
+    energy = parseInt(document.getElementById('energy').value) || 0;
+    quantity = parseInt(document.getElementById('quantity').value) || 0;
+  } else if (type === 'accessory') {
+    subType = document.getElementById('accessorySubType').value;
+    magicEffect = document.getElementById('magicEffect').value.trim();
+  } else if (type === 'material') {
+    quantity = parseInt(document.getElementById('quantity').value) || 0;
+  }
+  const desc = document.getElementById('itemDesc').value.trim();
+  const equipped = (type === 'armor' || type === 'weapon') ? false : undefined;
+  
+  if (name) {
+    const item = { name, type, subType, category, material, quality, acBonus, energy, quantity, magicEffect, desc, equipped };
+    if (editingIndex !== null) {
+      item.equipped = inventory[editingIndex].equipped || false;
+      inventory[editingIndex] = item;
+      editingIndex = null;
+      document.getElementById('addItemBtn').textContent = 'Добавить предмет';
+    } else {
+      inventory.push(item);
+    }
+    renderInventory();
+    document.getElementById('itemName').value = '';
+    document.getElementById('itemDesc').value = '';
+    document.getElementById('acBonus').value = '';
+    document.getElementById('energy').value = '';
+    document.getElementById('quantity').value = '';
+    document.getElementById('magicEffect').value = '';
+    updateInventoryForm();
+    updateAC();
+    saveToLocalStorage();
+  } else {
+    alert('Название предмета обязательно!');
+  }
+});
+function deleteItem(idx) {
+  inventory.splice(idx, 1);
+  renderInventory();
+  updateAC();
+  saveToLocalStorage();
+}
+function editItem(idx) {
+  const item = inventory[idx];
+  document.getElementById('itemName').value = item.name;
+  document.getElementById('itemType').value = item.type;
+  updateInventoryForm();
+  if (item.type === 'weapon') {
+    document.getElementById('weaponSubType').value = item.subType;
+    document.getElementById('weaponCategory').value = item.category;
+    document.getElementById('itemQuality').value = item.quality;
+  } else if (item.type === 'armor') {
+    document.getElementById('armorSubType').value = item.subType;
+    document.getElementById('armorMaterial').value = item.material;
+    document.getElementById('itemQuality').value = item.quality;
+    document.getElementById('acBonus').value = item.acBonus || '';
+  } else if (item.type === 'food') {
+    document.getElementById('foodSubType').value = item.subType;
+    document.getElementById('energy').value = item.energy || '';
+    document.getElementById('quantity').value = item.quantity || '';
+  } else if (item.type === 'accessory') {
+    document.getElementById('accessorySubType').value = item.subType;
+    document.getElementById('magicEffect').value = item.magicEffect || '';
+  } else if (item.type === 'material') {
+    document.getElementById('quantity').value = item.quantity || '';
+  }
+  document.getElementById('itemDesc').value = item.desc || '';
+  editingIndex = idx;
+  document.getElementById('addItemBtn').textContent = 'Сохранить предмет';
+}
+
+// Spells
+let spells = [];
+let spellEditingIndex = null;
+function renderSpells() {
+  const list = document.getElementById('spellList');
+  list.innerHTML = '';
+  spells.forEach((spell, idx) => {
+    const div = document.createElement('div');
+    div.className = 'spell-item';
+    let displayText = `${spell.name} (Уровень ${spell.level}${spell.level === '0' ? ' - Кантрип' : ''})`;
+    if (spell.castingTime) displayText += `, Время: ${spell.castingTime}`;
+    if (spell.range) displayText += `, Дальность: ${spell.range}`;
+    if (spell.desc) displayText += `: ${spell.desc}`;
+    
+    const span = document.createElement('span');
+    span.textContent = displayText;
+    div.appendChild(span);
+    
+    const editBtn = document.createElement('button');
+    editBtn.textContent = 'Редактировать';
+    editBtn.onclick = () => editSpell(idx);
+    div.appendChild(editBtn);
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'X';
+    deleteBtn.onclick = () => deleteSpell(idx);
+    div.appendChild(deleteBtn);
+    
+    list.appendChild(div);
+  });
+}
+document.getElementById('addSpellBtn').addEventListener('click', () => {
+  const name = document.getElementById('spellName').value.trim();
+  const level = document.getElementById('spellLevel').value;
+  const castingTime = document.getElementById('spellCastingTime').value.trim();
+  const range = document.getElementById('spellRange').value.trim();
+  const desc = document.getElementById('spellDesc').value.trim();
+  
+  if (name) {
+    const spell = { name, level, castingTime, range, desc };
+    if (spellEditingIndex !== null) {
+      spells[spellEditingIndex] = spell;
+      spellEditingIndex = null;
+      document.getElementById('addSpellBtn').textContent = 'Добавить заклинание';
+    } else {
+      spells.push(spell);
+    }
+    renderSpells();
+    document.getElementById('spellName').value = '';
+    document.getElementById('spellLevel').value = '0';
+    document.getElementById('spellCastingTime').value = '';
+    document.getElementById('spellRange').value = '';
+    document.getElementById('spellDesc').value = '';
+    saveToLocalStorage();
+  } else {
+    alert('Название заклинания обязательно!');
+  }
+});
+function deleteSpell(idx) {
+  spells.splice(idx, 1);
+  renderSpells();
+  saveToLocalStorage();
+}
+function editSpell(idx) {
+  const spell = spells[idx];
+  document.getElementById('spellName').value = spell.name;
+  document.getElementById('spellLevel').value = spell.level;
+  document.getElementById('spellCastingTime').value = spell.castingTime || '';
+  document.getElementById('spellRange').value = spell.range || '';
+  document.getElementById('spellDesc').value = spell.desc || '';
+  spellEditingIndex = idx;
+  document.getElementById('addSpellBtn').textContent = 'Сохранить заклинание';
+}
+
+// LocalStorage
+function saveToLocalStorage() {
+  const data = {
+    name: document.getElementById('charName').textContent,
+    race: document.getElementById('charRace').textContent,
+    "class": document.getElementById('charClass').textContent,
+    level: document.getElementById('charLevel').textContent,
+    xpCurrent: document.getElementById('xpCurrent').value,
+    xpNext: document.getElementById('xpNext').value,
+    abilities: {
+      str: document.getElementById('str').value,
+      dex: document.getElementById('dex').value,
+      con: document.getElementById('con').value,
+      int: document.getElementById('int').value,
+      wis: document.getElementById('wis').value,
+      cha: document.getElementById('cha').value
+    },
+    currentHP: document.getElementById('currentHP').value,
+    maxHP: document.getElementById('maxHP').value,
+    ac: document.getElementById('ac').value,
+    profBonus: document.getElementById('profBonus').value,
+    skills: {
+      athleticsProf: document.getElementById('athleticsProf').checked,
+      acrobaticsProf: document.getElementById('acrobaticsProf').checked,
+      sleightOfHandProf: document.getElementById('sleightOfHandProf').checked,
+      stealthProf: document.getElementById('stealthProf').checked,
+      arcanaProf: document.getElementById('arcanaProf').checked,
+      historyProf: document.getElementById('historyProf').checked,
+      investigationProf: document.getElementById('investigationProf').checked,
+      natureProf: document.getElementById('natureProf').checked,
+      religionProf: document.getElementById('religionProf').checked,
+      animalHandlingProf: document.getElementById('animalHandlingProf').checked,
+      insightProf: document.getElementById('insightProf').checked,
+      medicineProf: document.getElementById('medicineProf').checked,
+      perceptionProf: document.getElementById('perceptionProf').checked,
+      survivalProf: document.getElementById('survivalProf').checked,
+      deceptionProf: document.getElementById('deceptionProf').checked,
+      intimidationProf: document.getElementById('intimidationProf').checked,
+      performanceProf: document.getElementById('performanceProf').checked,
+      persuasionProf: document.getElementById('persuasionProf').checked
+    },
+    inventory: inventory,
+    spells: spells,
+    spellSlots: {
+      slot1: document.getElementById('slot1').value,
+      slot2: document.getElementById('slot2').value,
+      slot3: document.getElementById('slot3').value,
+      slot4: document.getElementById('slot4').value,
+      slot5: document.getElementById('slot5').value,
+      slot6: document.getElementById('slot6').value,
+      slot7: document.getElementById('slot7').value,
+      slot8: document.getElementById('slot8').value,
+      slot9: document.getElementById('slot9').value
+    },
+    notes: document.getElementById('notesArea').value,
+    avatar: avatarData
+  };
+  localStorage.setItem('characterData', JSON.stringify(data));
+}
+
+function loadFromLocalStorage() {
+  try {
+    const data = JSON.parse(localStorage.getItem('characterData') || '{}');
+    // Установка начальных значений, если данные отсутствуют
+    document.getElementById('charName').textContent = data.name || 'Mell';
+    document.getElementById('charRace').textContent = data.race || 'Tiefling';
+    document.getElementById('charClass').textContent = data.class || 'Ranger';
+    document.getElementById('charLevel').textContent = data.level || '1';
+    document.getElementById('xpCurrent').value = data.xpCurrent || '0';
+    document.getElementById('xpNext').value = data.xpNext || '300';
+    ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(stat => {
+      if (data.abilities && data.abilities[stat] !== undefined) {
+        document.getElementById(stat).value = data.abilities[stat];
+      } else {
+        document.getElementById(stat).value = 10; // Начальные значения
+      }
+      updateModifier(stat);
+    });
+    document.getElementById('currentHP').value = data.currentHP || '10';
+    document.getElementById('maxHP').value = data.maxHP || '10';
+    document.getElementById('ac').value = data.ac || '15';
+    document.getElementById('profBonus').value = data.profBonus || '2';
+    if (data.skills) {
+      Object.keys(skillMap).forEach(skill => {
+        const profId = skillMap[skill].profId;
+        document.getElementById(profId).checked = data.skills[profId] || false;
+      });
+    } else {
+      Object.keys(skillMap).forEach(skill => {
+        document.getElementById(skillMap[skill].profId).checked = false;
+      });
+    }
+    inventory = data.inventory || [];
+    spells = data.spells || [];
+    if (data.spellSlots) {
+      ['slot1', 'slot2', 'slot3', 'slot4', 'slot5', 'slot6', 'slot7', 'slot8', 'slot9'].forEach(slot => {
+        document.getElementById(slot).value = data.spellSlots[slot] || '0';
+      });
+    }
+    renderInventory();
+    renderSpells();
+    document.getElementById('notesArea').value = data.notes || '';
+    if (data.avatar) {
+      avatarData = data.avatar;
+      document.getElementById('avatarPreview').style.backgroundImage = `url(${avatarData})`;
+    }
+    updateSkills();
+    updateInventoryForm();
+    updateAC();
+    updateXP();
+  } catch (error) {
+    console.error('Ошибка загрузки из localStorage:', error);
+  }
+}
+
+function clearLocalStorage() {
+  if (confirm('Сбросить все данные персонажа?')) {
+    localStorage.removeItem('characterData');
+    location.reload();
+  }
+}
+
+// Settings: export/import
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const data = {
+    name: document.getElementById('charName').textContent,
+    race: document.getElementById('charRace').textContent,
+    "class": document.getElementById('charClass').textContent,
+    level: document.getElementById('charLevel').textContent,
+    xpCurrent: document.getElementById('xpCurrent').value,
+    xpNext: document.getElementById('xpNext').value,
+    abilities: {
+      str: document.getElementById('str').value,
+      dex: document.getElementById('dex').value,
+      con: document.getElementById('con').value,
+      int: document.getElementById('int').value,
+      wis: document.getElementById('wis').value,
+      cha: document.getElementById('cha').value
+    },
+    currentHP: document.getElementById('currentHP').value,
+    maxHP: document.getElementById('maxHP').value,
+    ac: document.getElementById('ac').value,
+    profBonus: document.getElementById('profBonus').value,
+    skills: {
+      athleticsProf: document.getElementById('athleticsProf').checked,
+      acrobaticsProf: document.getElementById('acrobaticsProf').checked,
+      sleightOfHandProf: document.getElementById('sleightOfHandProf').checked,
+      stealthProf: document.getElementById('stealthProf').checked,
+      arcanaProf: document.getElementById('arcanaProf').checked,
+      historyProf: document.getElementById('historyProf').checked,
+      investigationProf: document.getElementById('investigationProf').checked,
+      natureProf: document.getElementById('natureProf').checked,
+      religionProf: document.getElementById('religionProf').checked,
+      animalHandlingProf: document.getElementById('animalHandlingProf').checked,
+      insightProf: document.getElementById('insightProf').checked,
+      medicineProf: document.getElementById('medicineProf').checked,
+      perceptionProf: document.getElementById('perceptionProf').checked,
+      survivalProf: document.getElementById('survivalProf').checked,
+      deceptionProf: document.getElementById('deceptionProf').checked,
+      intimidationProf: document.getElementById('intimidationProf').checked,
+      performanceProf: document.getElementById('performanceProf').checked,
+      persuasionProf: document.getElementById('persuasionProf').checked
+    },
+    inventory: inventory,
+    spells: spells,
+    spellSlots: {
+      slot1: document.getElementById('slot1').value,
+      slot2: document.getElementById('slot2').value,
+      slot3: document.getElementById('slot3').value,
+      slot4: document.getElementById('slot4').value,
+      slot5: document.getElementById('slot5').value,
+      slot6: document.getElementById('slot6').value,
+      slot7: document.getElementById('slot7').value,
+      slot8: document.getElementById('slot8').value,
+      slot9: document.getElementById('slot9').value
+    },
+    notes: document.getElementById('notesArea').value,
+    avatar: avatarData
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'character.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('importBtn').addEventListener('click', () => {
+  document.getElementById('importInput').click();
+});
+
+document.getElementById('importInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        const data = JSON.parse(ev.target.result);
+        localStorage.setItem('characterData', JSON.stringify(data));
+        loadFromLocalStorage();
+      } catch (error) {
+        alert('Ошибка импорта JSON: неверный формат файла');
+      }
+    };
+    reader.onerror = function() {
+      alert('Ошибка чтения файла');
+    };
+    reader.readAsText(file);
+  }
+});
+</script>
+</body>
+</html>
