@@ -15,6 +15,12 @@
     --text-gray: #A9A9A9;
     --progress-bg: #4A4A4A;
     --progress-fill: #32CD32;
+    --quality-common: #A9A9A9; /* Серый для обычного */
+    --quality-uncommon: #00FF00; /* Зелёный для необычного */
+    --quality-rare: #0000FF; /* Синий для редкого */
+    --quality-epic: #800080; /* Фиолетовый для эпического */
+    --quality-legendary: #FFA500; /* Оранжевый для легендарного */
+    --quality-artifact: #FFD700; /* Золотой для артефакта */
   }
   * {
     box-sizing: border-box;
@@ -173,6 +179,27 @@
   }
   .inventory-item span, .spell-item span {
     flex: 1;
+  }
+  .inventory-item .quality {
+    font-weight: bold;
+  }
+  .quality-common {
+    color: var(--quality-common);
+  }
+  .quality-uncommon {
+    color: var(--quality-uncommon);
+  }
+  .quality-rare {
+    color: var(--quality-rare);
+  }
+  .quality-epic {
+    color: var(--quality-epic);
+  }
+  .quality-legendary {
+    color: var(--quality-legendary);
+  }
+  .quality-artifact {
+    color: var(--quality-artifact);
   }
   .inventory-item button, .spell-item button {
     margin-left: 4px;
@@ -353,10 +380,10 @@
   <div class="avatar-preview" id="avatarPreview" role="img" aria-label="Персонаж"></div>
   <label for="avatarInput" class="sr-only">Загрузить аватар</label>
   <input type="file" id="avatarInput" accept="image/*">
-  <h1 contenteditable="true" id="charName" oninput="limitContentLength('charName', 50); saveToLocalStorage()">Mell</h1>
+  <h1 contenteditable="true" id="charName" oninput="limitContentLength('charName', 50); saveToLocalStorage()">Имя персонажа</h1>
   <div class="sub">
-    Раса: <span contenteditable="true" id="charRace" oninput="limitContentLength('charRace', 30); saveToLocalStorage()">Tiefling</span> |
-    Класс: <span contenteditable="true" id="charClass" oninput="limitContentLength('charClass', 30); saveToLocalStorage()">Ranger</span> |
+    Раса: <span contenteditable="true" id="charRace" oninput="limitContentLength('charRace', 30); saveToLocalStorage()">Раса</span> |
+    Класс: <span contenteditable="true" id="charClass" oninput="limitContentLength('charClass', 30); saveToLocalStorage()">Класс</span> |
     Уровень: <span contenteditable="true" id="charLevel" oninput="limitContentLength('charLevel', 3); saveToLocalStorage()">1</span>
   </div>
 </header>
@@ -386,33 +413,33 @@
     <div class="abilities" id="abilitiesContainer">
       <div class="ability-card">
         <label for="str">Сила</label>
-        <input type="number" min="1" max="30" value="8" id="str" oninput="updateModifier('str'); updateSkills(); updateAC(); saveToLocalStorage()">
-        <span id="strMod">Mod: -1</span>
+        <input type="number" min="1" max="30" value="10" id="str" oninput="updateModifier('str'); updateSkills(); updateAC(); saveToLocalStorage()">
+        <span id="strMod">Mod: +0</span>
       </div>
       <div class="ability-card">
         <label for="dex">Ловкость</label>
-        <input type="number" min="1" max="30" value="14" id="dex" oninput="updateModifier('dex'); updateSkills(); updateAC(); saveToLocalStorage()">
-        <span id="dexMod">Mod: +2</span>
+        <input type="number" min="1" max="30" value="10" id="dex" oninput="updateModifier('dex'); updateSkills(); updateAC(); saveToLocalStorage()">
+        <span id="dexMod">Mod: +0</span>
       </div>
       <div class="ability-card">
         <label for="con">Телосложение</label>
-        <input type="number" min="1" max="30" value="12" id="con" oninput="updateModifier('con'); updateSkills(); saveToLocalStorage()">
-        <span id="conMod">Mod: +1</span>
+        <input type="number" min="1" max="30" value="10" id="con" oninput="updateModifier('con'); updateSkills(); saveToLocalStorage()">
+        <span id="conMod">Mod: +0</span>
       </div>
       <div class="ability-card">
         <label for="int">Интеллект</label>
-        <input type="number" min="1" max="30" value="11" id="int" oninput="updateModifier('int'); updateSkills(); saveToLocalStorage()">
+        <input type="number" min="1" max="30" value="10" id="int" oninput="updateModifier('int'); updateSkills(); saveToLocalStorage()">
         <span id="intMod">Mod: +0</span>
       </div>
       <div class="ability-card">
         <label for="wis">Мудрость</label>
-        <input type="number" min="1" max="30" value="13" id="wis" oninput="updateModifier('wis'); updateSkills(); saveToLocalStorage()">
-        <span id="wisMod">Mod: +1</span>
+        <input type="number" min="1" max="30" value="10" id="wis" oninput="updateModifier('wis'); updateSkills(); saveToLocalStorage()">
+        <span id="wisMod">Mod: +0</span>
       </div>
       <div class="ability-card">
         <label for="cha">Харизма</label>
-        <input type="number" min="1" max="30" value="16" id="cha" oninput="updateModifier('cha'); updateSkills(); saveToLocalStorage()">
-        <span id="chaMod">Mod: +3</span>
+        <input type="number" min="1" max="30" value="10" id="cha" oninput="updateModifier('cha'); updateSkills(); saveToLocalStorage()">
+        <span id="chaMod">Mod: +0</span>
       </div>
     </div>
     <h2>Броски кубиков</h2>
@@ -577,7 +604,7 @@
         <option value="misc">Разное</option>
       </select>
       <label for="weaponSubType" class="dynamic-field" id="weaponSubTypeField">Тип оружия</label>
-      <select id="weaponSubType" class="dynamic-field">
+      <select id="weaponSubType" class="dynamic-field" onchange="updateWeaponCategory()">
         <option value="dagger">Кинжал</option>
         <option value="shortsword">Короткий меч</option>
         <option value="longsword">Длинный меч</option>
@@ -614,11 +641,11 @@
       <label for="itemQuality" class="dynamic-field" id="itemQualityField">Качество</label>
       <select id="itemQuality" class="dynamic-field">
         <option value="common">Обычное</option>
-        <option value="improved">Улучшенное</option>
-        <option value="masterwork">Мастерское</option>
-        <option value="magic1">Магическое +1</option>
-        <option value="magic2">Магическое +2</option>
-        <option value="magic3">Магическое +3</option>
+        <option value="uncommon">Необычное</option>
+        <option value="rare">Редкое</option>
+        <option value="epic">Эпическое</option>
+        <option value="legendary">Легендарное</option>
+        <option value="artifact">Артефакт</option>
       </select>
       <label for="foodSubType" class="dynamic-field" id="foodSubTypeField">Тип продовольствия</label>
       <select id="foodSubType" class="dynamic-field">
@@ -635,12 +662,22 @@
       </select>
       <label for="acBonus" class="dynamic-field" id="acBonusField">Дополнительный бонус AC</label>
       <input type="number" min="0" max="3" id="acBonus" class="dynamic-field" placeholder="Бонус AC">
-      <label for="energy" class="dynamic-field" id="energyField">Энергия (восстановление HP)</label>
-      <input type="number" min="0" max="100" id="energy" class="dynamic-field" placeholder="Энергия">
+      <label for="energy" class="dynamic-field" id="energyField">Восстановление HP</label>
+      <input type="number" min="0" max="100" id="energy" class="dynamic-field" placeholder="Восстановление HP">
       <label for="quantity" class="dynamic-field" id="quantityField">Количество</label>
       <input type="number" min="0" max="999" id="quantity" class="dynamic-field" placeholder="Количество">
       <label for="magicEffect" class="dynamic-field" id="magicEffectField">Магический эффект</label>
-      <input type="text" id="magicEffect" class="dynamic-field" placeholder="Магический эффект" maxlength="100">
+      <select id="magicEffect" class="dynamic-field">
+        <option value="">Выберите эффект</option>
+        <option value="+1 to AC">+1 to AC</option>
+        <option value="+1 to Strength">+1 to Strength</option>
+        <option value="Invisibility once per day">Invisibility once per day</option>
+        <option value="Fire Resistance">Fire Resistance</option>
+        <option value="Healing">Healing</option>
+        <option value="Teleportation">Teleportation</option>
+        <option value="Darkvision">Darkvision</option>
+        <option value="custom">Кастомный (укажите в описании)</option>
+      </select>
       <label for="itemDesc">Описание</label>
       <textarea id="itemDesc" placeholder="Описание" maxlength="200"></textarea>
       <button id="addItemBtn">Добавить предмет</button>
@@ -910,11 +947,11 @@ const materialModifiers = {
 };
 const qualityModifiers = {
   common: 0,
-  improved: 1,
-  masterwork: 2,
-  magic1: 1,
-  magic2: 2,
-  magic3: 3
+  uncommon: 1,
+  rare: 2,
+  epic: 3,
+  legendary: 4,
+  artifact: 5
 };
 function updateAC() {
   const dexValue = parseInt(document.getElementById('dex').value) || 10;
@@ -1031,6 +1068,33 @@ document.getElementById('avatarInput').addEventListener('change', function(e) {
 // Inventory
 let inventory = [];
 let editingIndex = null;
+function updateWeaponCategory() {
+  const subType = document.getElementById('weaponSubType').value;
+  const categorySelect = document.getElementById('weaponCategory');
+  categorySelect.innerHTML = '';
+  const meleeOption = document.createElement('option');
+  meleeOption.value = 'melee';
+  meleeOption.textContent = 'Ближний бой';
+  const magicOption = document.createElement('option');
+  magicOption.value = 'magic';
+  magicOption.textContent = 'Магическое';
+  const rangedOption = document.createElement('option');
+  rangedOption.value = 'ranged';
+  rangedOption.textContent = 'Дальний бой';
+  const meleeWeapons = ['dagger', 'shortsword', 'longsword', 'greatsword', 'mace', 'axe', 'spear', 'staff'];
+  const rangedWeapons = ['bow', 'crossbow'];
+  if (meleeWeapons.includes(subType)) {
+    categorySelect.appendChild(meleeOption);
+    categorySelect.appendChild(magicOption);
+  } else if (rangedWeapons.includes(subType)) {
+    categorySelect.appendChild(rangedOption);
+    categorySelect.appendChild(magicOption);
+  } else {
+    categorySelect.appendChild(meleeOption);
+    categorySelect.appendChild(rangedOption);
+    categorySelect.appendChild(magicOption);
+  }
+}
 function updateInventoryForm() {
   const itemType = document.getElementById('itemType').value;
   const fields = ['weaponSubTypeField', 'weaponCategoryField', 'armorSubTypeField', 'armorMaterialField', 'itemQualityField', 'foodSubTypeField', 'accessorySubTypeField', 'acBonusField', 'energyField', 'quantityField', 'magicEffectField'];
@@ -1044,6 +1108,7 @@ function updateInventoryForm() {
     document.getElementById('weaponCategory').classList.add('active');
     document.getElementById('itemQualityField').classList.add('active');
     document.getElementById('itemQuality').classList.add('active');
+    updateWeaponCategory(); // Ограничение категорий
   } else if (itemType === 'armor') {
     document.getElementById('armorSubTypeField').classList.add('active');
     document.getElementById('armorSubType').classList.add('active');
@@ -1061,6 +1126,8 @@ function updateInventoryForm() {
     document.getElementById('accessorySubTypeField').classList.add('active');
     document.getElementById('accessorySubType').classList.add('active');
     document.getElementById('magicEffectField').classList.add('active');
+    document.getElementById('itemQualityField').classList.add('active');
+    document.getElementById('itemQuality').classList.add('active');
   } else if (itemType === 'material') {
     document.getElementById('quantityField').classList.add('active');
   }
@@ -1077,16 +1144,21 @@ function renderInventory() {
       const globalIdx = inventory.indexOf(item);
       const div = document.createElement('div');
       div.className = 'inventory-item';
-      let displayText = `${item.name} (${item.type}${item.subType ? `, ${item.subType}` : ''}${item.category ? `, ${item.category}` : ''}${item.material ? `, ${item.material}` : ''}${item.quality ? `, ${item.quality}` : ''})`;
+      let displayText = `${item.name} (${item.type}`;
+      if (item.subType) displayText += `, ${item.subType}`;
+      if (item.category) displayText += `, ${item.category}`;
+      if (item.material) displayText += `, ${item.material}`;
+      if (item.quality) displayText += `, <span class="quality quality-${item.quality}">${item.quality}</span>`;
       if (item.acBonus) displayText += `, AC +${item.acBonus}`;
-      if (item.energy) displayText += `, Энергия ${item.energy}`;
+      if (item.energy) displayText += `, Восстановление HP: ${item.energy}`;
       if (item.quantity) displayText += `, Кол-во: ${item.quantity}`;
-      if (item.magicEffect) displayText += `, ${item.magicEffect}`;
+      if (item.magicEffect) displayText += `, Эффект: ${item.magicEffect}`;
       if (item.desc) displayText += `: ${item.desc}`;
       if (item.equipped) displayText += ` [Экипировано]`;
+      displayText += ')';
       
       const span = document.createElement('span');
-      span.textContent = displayText;
+      span.innerHTML = displayText; // Используем innerHTML для цветов качества
       div.appendChild(span);
       
       if (item.type === 'armor' || item.type === 'weapon') {
@@ -1160,7 +1232,8 @@ document.getElementById('addItemBtn').addEventListener('click', () => {
     quantity = parseInt(document.getElementById('quantity').value) || 0;
   } else if (type === 'accessory') {
     subType = document.getElementById('accessorySubType').value;
-    magicEffect = document.getElementById('magicEffect').value.trim();
+    magicEffect = document.getElementById('magicEffect').value;
+    quality = document.getElementById('itemQuality').value;
   } else if (type === 'material') {
     quantity = parseInt(document.getElementById('quantity').value) || 0;
   }
@@ -1204,6 +1277,7 @@ function editItem(idx) {
   updateInventoryForm();
   if (item.type === 'weapon') {
     document.getElementById('weaponSubType').value = item.subType;
+    updateWeaponCategory();
     document.getElementById('weaponCategory').value = item.category;
     document.getElementById('itemQuality').value = item.quality;
   } else if (item.type === 'armor') {
@@ -1218,6 +1292,7 @@ function editItem(idx) {
   } else if (item.type === 'accessory') {
     document.getElementById('accessorySubType').value = item.subType;
     document.getElementById('magicEffect').value = item.magicEffect || '';
+    document.getElementById('itemQuality').value = item.quality;
   } else if (item.type === 'material') {
     document.getElementById('quantity').value = item.quantity || '';
   }
@@ -1364,23 +1439,19 @@ function loadFromLocalStorage() {
   try {
     const data = JSON.parse(localStorage.getItem('characterData') || '{}');
     // Установка начальных значений, если данные отсутствуют
-    document.getElementById('charName').textContent = data.name || 'Mell';
-    document.getElementById('charRace').textContent = data.race || 'Tiefling';
-    document.getElementById('charClass').textContent = data.class || 'Ranger';
+    document.getElementById('charName').textContent = data.name || 'Имя персонажа';
+    document.getElementById('charRace').textContent = data.race || 'Раса';
+    document.getElementById('charClass').textContent = data.class || 'Класс';
     document.getElementById('charLevel').textContent = data.level || '1';
     document.getElementById('xpCurrent').value = data.xpCurrent || '0';
     document.getElementById('xpNext').value = data.xpNext || '300';
     ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(stat => {
-      if (data.abilities && data.abilities[stat] !== undefined) {
-        document.getElementById(stat).value = data.abilities[stat];
-      } else {
-        document.getElementById(stat).value = 10; // Начальные значения
-      }
+      document.getElementById(stat).value = (data.abilities && data.abilities[stat]) || '10';
       updateModifier(stat);
     });
     document.getElementById('currentHP').value = data.currentHP || '10';
     document.getElementById('maxHP').value = data.maxHP || '10';
-    document.getElementById('ac').value = data.ac || '15';
+    document.getElementById('ac').value = data.ac || '10';
     document.getElementById('profBonus').value = data.profBonus || '2';
     if (data.skills) {
       Object.keys(skillMap).forEach(skill => {
