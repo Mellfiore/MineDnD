@@ -1,11 +1,351 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>D&D: Morgland</title>
-  <link rel="stylesheet" href="styles.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D&D: Morgland</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --dark-bg: #1A1A1A;
+    --dark-panel: #2C2C2C;
+    --accent-blue: #007BFF;
+    --accent-red: #FF4C4C;
+    --text-white: #FFFFFF;
+    --text-gray: #A9A9A9;
+    --progress-bg: #4A4A4A;
+    --progress-fill: #32CD32;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: 'Noto Sans', sans-serif;
+    background-color: var(--dark-bg);
+    color: var(--text-white);
+    overflow-x: hidden;
+  }
+  header {
+    padding: 12px;
+    background: var(--dark-panel);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 100%;
+  }
+  header h1 {
+    margin: 4px 0;
+    font-size: 20pt;
+    text-align: center;
+  }
+  header .sub {
+    font-size: 12pt;
+    color: var(--text-gray);
+    text-align: center;
+  }
+  nav {
+    display: flex;
+    justify-content: space-around;
+    background: var(--dark-panel);
+    padding: 8px 0;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    z-index: 100;
+    height: 60px;
+  }
+  nav button {
+    background: none;
+    border: none;
+    color: var(--text-white);
+    font-size: 14pt;
+    cursor: pointer;
+  }
+  nav button.active {
+    border-bottom: 2px solid var(--accent-blue);
+  }
+  .tab {
+    display: none;
+    padding: 12px;
+    padding-bottom: 80px;
+    max-width: 100%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    text-align: center; /* Выравнивание текста по центру */
+  }
+  .active-tab {
+    display: block;
+    opacity: 1;
+  }
+  .container {
+    max-width: 800px; /* Ограничение ширины для ПК */
+    margin: 0 auto; /* Центрирование */
+    padding: 0 12px; /* Отступы для удобства */
+  }
+  .abilities {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-areas: 
+      "str int"
+      "dex wis"
+      "con cha";
+    gap: 8px;
+    margin-top: 12px;
+    max-width: 100%;
+    justify-content: center; /* Центрирование грида */
+  }
+  .ability-card:nth-child(1) { grid-area: str; }
+  .ability-card:nth-child(2) { grid-area: dex; }
+  .ability-card:nth-child(3) { grid-area: con; }
+  .ability-card:nth-child(4) { grid-area: int; }
+  .ability-card:nth-child(5) { grid-area: wis; }
+  .ability-card:nth-child(6) { grid-area: cha; }
+  .skills, .spell-slots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+    max-width: 100%;
+    justify-content: center; /* Центрирование грида */
+  }
+  .ability-card, .skill-item, .spell-slot-item {
+    background: var(--dark-panel);
+    padding: 8px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .ability-card label, .skill-item label, .spell-slot-item label {
+    display: block;
+    margin-bottom: 4px;
+  }
+  .ability-card input, .spell-slot-item input, .xp input {
+    width: 40px;
+    font-size: 16pt;
+    text-align: center;
+    background: var(--dark-bg);
+    color: var(--text-white);
+    border: 1px solid var(--text-gray);
+    border-radius: 4px;
+  }
+  .ability-card span, .skill-item span, .spell-slot-item span {
+    display: block;
+    font-size: 12pt;
+    color: var(--text-gray);
+  }
+  .skill-item {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Центрирование внутри элемента */
+  }
+  .skill-item input {
+    margin-right: 8px;
+  }
+  .dice-row {
+    margin-top: 12px;
+    display: flex;
+    justify-content: center; /* Центрирование кнопок кубиков */
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+  .dice-button {
+    background: var(--accent-blue);
+    color: var(--text-white);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    margin: 4px;
+    font-weight: bold;
+    font-size: 14pt;
+    cursor: pointer;
+  }
+  .inventory-item, .spell-item {
+    background: var(--dark-panel);
+    padding: 8px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left; /* Сохраняем выравнивание текста внутри */
+  }
+  .inventory-item span, .spell-item span {
+    flex: 1;
+  }
+  .inventory-item button, .spell-item button {
+    margin-left: 4px;
+    background: var(--accent-red);
+    border: none;
+    color: var(--text-white);
+    border-radius: 4px;
+    padding: 2px 6px;
+    cursor: pointer;
+  }
+  .inventory-form input, .inventory-form select, .spells-form input, .spells-form select {
+    margin-bottom: 6px;
+    width: 100%;
+    padding: 6px;
+    border-radius: 4px;
+    border: 1px solid var(--text-gray);
+    background: var(--dark-bg);
+    color: var(--text-white);
+    text-align: center; /* Центрирование текста в полях ввода */
+  }
+  .notes textarea, .spells-form textarea {
+    width: 100%;
+    height: 200px;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--text-gray);
+    background: var(--dark-bg);
+    color: var(--text-white);
+    text-align: center; /* Центрирование текста в textarea */
+  }
+  .settings button {
+    width: 48%;
+    margin: 4px 1%;
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    background: var(--accent-blue);
+    color: var(--text-white);
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .avatar-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    margin: 8px auto; /* Центрирование аватара */
+    border: 2px solid var(--accent-blue);
+  }
+  .stats {
+    display: flex;
+    justify-content: center; /* Центрирование статистики */
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .xp {
+    margin-top: 12px;
+    max-width: 100%;
+    text-align: center; /* Центрирование блока опыта */
+  }
+  .xp label {
+    display: block;
+    margin-bottom: 4px;
+  }
+  .progress-bar {
+    width: 100%;
+    background: var(--progress-bg);
+    border-radius: 4px;
+    height: 20px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--progress-fill);
+    transition: width 0.3s ease;
+  }
+  .stats input, .xp input {
+    width: 60px;
+    padding: 6px;
+    background: var(--dark-bg);
+    color: var(--text-white);
+    border: 1px solid var(--text-gray);
+    border-radius: 4px;
+    text-align: center; /* Центрирование текста в полях ввода */
+  }
+  .xp button {
+    margin-top: 8px;
+    background: var(--accent-blue);
+    color: var(--text-white);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .inventory-tabs {
+    display: flex;
+    justify-content: center; /* Центрирование вкладок инвентаря */
+    margin-bottom: 12px;
+  }
+  .inventory-tabs button {
+    background: none;
+    border: none;
+    color: var(--text-white);
+    font-size: 12pt;
+    cursor: pointer;
+    padding: 6px;
+  }
+  .inventory-tabs button.active {
+    border-bottom: 2px solid var(--accent-blue);
+  }
+  .inventory-content {
+    display: none;
+  }
+  .inventory-content.active {
+    display: block;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+  .inventory-form .dynamic-field, .spells-form .dynamic-field {
+    display: none;
+  }
+  .inventory-form .dynamic-field.active, .spells-form .dynamic-field.active {
+    display: block;
+  }
+  .inventory-item input[type="checkbox"] {
+    margin-left: 8px;
+  }
+  @media (max-width: 500px) {
+    .abilities {
+      grid-template-columns: 1fr !important;
+      grid-template-areas: none;
+    }
+  }
+  @media (max-width: 600px) {
+    .skills, .spell-slots {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .dice-button {
+      width: 40px;
+      height: 40px;
+      font-size: 12pt;
+    }
+    header h1 {
+      font-size: 16pt;
+    }
+    header .sub {
+      font-size: 10pt;
+    }
+    .tab {
+      padding: 8px;
+      padding-bottom: 70px;
+    }
+    .container {
+      max-width: 100%; /* Убираем ограничение ширины на мобильных */
+      margin: 0; /* Убираем центрирование на мобильных */
+      padding: 0 8px; /* Уменьшаем отступы */
+    }
+  }
+  @media (max-width: 400px) {
+    .skills, .spell-slots {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
 </head>
 <body onload="loadFromLocalStorage()">
 
@@ -403,14 +743,14 @@
   </div>
 </div>
 
-<div class="nav">
+<nav>
   <button onclick="showTab('tabCharacter')" class="nav-btn active">Персонаж</button>
   <button onclick="showTab('tabSkills')" class="nav-btn">Навыки</button>
   <button onclick="showTab('tabInventory')" class="nav-btn">Инвентарь</button>
   <button onclick="showTab('tabSpells')" class="nav-btn">Заклинания</button>
   <button onclick="showTab('tabNotes')" class="nav-btn">Заметки</button>
   <button onclick="showTab('tabSettings')" class="nav-btn">Настройки</button>
-</div>
+</nav>
 
 <script>
 var gk_isXlsx = false;
@@ -456,6 +796,7 @@ function handleFileUpload(event) {
       gk_xlsxFileLookup[file.name] = true;
       gk_isXlsx = true;
       console.log('Файл загружен:', file.name);
+      // Здесь можно добавить дополнительную обработку, если нужно
     };
     reader.readAsDataURL(file);
   }
@@ -463,6 +804,7 @@ function handleFileUpload(event) {
 
 // Tab switching
 function showTab(tabId) {
+  console.log('Switching to tab:', tabId);
   document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active-tab'));
   document.getElementById(tabId).classList.add('active-tab');
   document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
@@ -666,7 +1008,7 @@ document.querySelectorAll('.dice-button').forEach(btn => {
     currentRolls.unshift(rollText);
     diceResult.textContent = currentRolls.slice(0, 5).join('\n');
   });
-}
+});
 
 // Avatar upload
 let avatarData = null;
@@ -824,7 +1166,7 @@ document.getElementById('addItemBtn').addEventListener('click', () => {
   }
   const desc = document.getElementById('itemDesc').value.trim();
   const equipped = (type === 'armor' || type === 'weapon') ? false : undefined;
-
+  
   if (name) {
     const item = { name, type, subType, category, material, quality, acBonus, energy, quantity, magicEffect, desc, equipped };
     if (editingIndex !== null) {
@@ -1021,6 +1363,7 @@ function saveToLocalStorage() {
 function loadFromLocalStorage() {
   try {
     const data = JSON.parse(localStorage.getItem('characterData') || '{}');
+    // Установка начальных значений, если данные отсутствуют
     document.getElementById('charName').textContent = data.name || 'Mell';
     document.getElementById('charRace').textContent = data.race || 'Tiefling';
     document.getElementById('charClass').textContent = data.class || 'Ranger';
@@ -1028,7 +1371,11 @@ function loadFromLocalStorage() {
     document.getElementById('xpCurrent').value = data.xpCurrent || '0';
     document.getElementById('xpNext').value = data.xpNext || '300';
     ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(stat => {
-      document.getElementById(stat).value = data.abilities?.[stat] || 10;
+      if (data.abilities && data.abilities[stat] !== undefined) {
+        document.getElementById(stat).value = data.abilities[stat];
+      } else {
+        document.getElementById(stat).value = 10; // Начальные значения
+      }
       updateModifier(stat);
     });
     document.getElementById('currentHP').value = data.currentHP || '10';
@@ -1037,7 +1384,12 @@ function loadFromLocalStorage() {
     document.getElementById('profBonus').value = data.profBonus || '2';
     if (data.skills) {
       Object.keys(skillMap).forEach(skill => {
-        document.getElementById(skillMap[skill].profId).checked = data.skills[skillMap[skill].profId] || false;
+        const profId = skillMap[skill].profId;
+        document.getElementById(profId).checked = data.skills[profId] || false;
+      });
+    } else {
+      Object.keys(skillMap).forEach(skill => {
+        document.getElementById(skillMap[skill].profId).checked = false;
       });
     }
     inventory = data.inventory || [];
@@ -1055,6 +1407,7 @@ function loadFromLocalStorage() {
       document.getElementById('avatarPreview').style.backgroundImage = `url(${avatarData})`;
     }
     updateSkills();
+    updateInventoryForm();
     updateAC();
     updateXP();
   } catch (error) {
