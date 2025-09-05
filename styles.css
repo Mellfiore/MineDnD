@@ -40,7 +40,7 @@ header .sub {
   color: var(--text-gray);
 }
 
-nav {
+.nav {
   display: flex;
   justify-content: space-around;
   background: var(--dark-panel);
@@ -53,15 +53,16 @@ nav {
   height: 60px;
 }
 
-nav button {
+.nav-btn {
   background: none;
   border: none;
   color: var(--text-white);
   font-size: 14pt;
   cursor: pointer;
+  flex: 1;
 }
 
-nav button.active {
+.nav-btn.active {
   border-bottom: 2px solid var(--accent-blue);
 }
 
@@ -79,47 +80,33 @@ nav button.active {
   opacity: 1;
 }
 
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
 .abilities {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-template-areas: 
-    "str int"
-    "dex wis"
-    "con cha";
   gap: 8px;
   margin-top: 12px;
   max-width: 100%;
 }
 
-.ability-card:nth-child(1) { grid-area: str; }
-.ability-card:nth-child(2) { grid-area: dex; }
-.ability-card:nth-child(3) { grid-area: con; }
-.ability-card:nth-child(4) { grid-area: int; }
-.ability-card:nth-child(5) { grid-area: wis; }
-.ability-card:nth-child(6) { grid-area: cha; }
-
-.skills, .spell-slots {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: 12px;
-  max-width: 100%;
-}
-
-.ability-card, .skill-item, .spell-slot-item {
+.ability-card {
   background: var(--dark-panel);
   padding: 8px;
   border-radius: 8px;
   text-align: center;
 }
 
-.ability-card label, .skill-item label, .spell-slot-item label {
+.ability-card label {
   display: block;
   margin-bottom: 4px;
 }
 
-.ability-card input, .spell-slot-item input, .xp input {
-  width: 40px;
+.ability-card input {
+  width: 60px;
   font-size: 16pt;
   text-align: center;
   background: var(--dark-bg);
@@ -128,19 +115,37 @@ nav button.active {
   border-radius: 4px;
 }
 
-.ability-card span, .skill-item span, .spell-slot-item span {
+.ability-card span {
   display: block;
   font-size: 12pt;
   color: var(--text-gray);
 }
 
+.skills {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+  max-width: 100%;
+}
+
 .skill-item {
+  background: var(--dark-panel);
+  padding: 8px;
+  border-radius: 8px;
+  text-align: center;
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
 .skill-item input {
   margin-right: 8px;
+}
+
+.skill-item span {
+  font-size: 12pt;
+  color: var(--text-gray);
 }
 
 .dice-row {
@@ -164,6 +169,13 @@ nav button.active {
   cursor: pointer;
 }
 
+#diceResult {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 16pt;
+  white-space: pre-wrap;
+}
+
 .inventory-item, .spell-item {
   background: var(--dark-panel);
   padding: 8px;
@@ -176,6 +188,7 @@ nav button.active {
 
 .inventory-item span, .spell-item span {
   flex: 1;
+  word-break: break-word;
 }
 
 .inventory-item button, .spell-item button {
@@ -188,7 +201,10 @@ nav button.active {
   cursor: pointer;
 }
 
-.inventory-form input, .inventory-form select, .spells-form input, .spells-form select {
+.inventory-form input,
+.inventory-form select,
+.spells-form input,
+.spells-form select {
   margin-bottom: 6px;
   width: 100%;
   padding: 6px;
@@ -198,7 +214,8 @@ nav button.active {
   color: var(--text-white);
 }
 
-.notes textarea, .spells-form textarea {
+.notes textarea,
+.spells-form textarea {
   width: 100%;
   height: 200px;
   padding: 8px;
@@ -235,10 +252,20 @@ nav button.active {
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   margin-top: 12px;
-  flex-wrap: wrap;
+  max-width: 100%;
 }
 
 .stats label {
+  text-align: center;
+}
+
+.stats input {
+  width: 60px;
+  padding: 6px;
+  background: var(--dark-bg);
+  color: var(--text-white);
+  border: 1px solid var(--text-gray);
+  border-radius: 4px;
   text-align: center;
 }
 
@@ -253,21 +280,7 @@ nav button.active {
   text-align: center;
 }
 
-.progress-bar {
-  width: 100%;
-  background: var(--progress-bg);
-  border-radius: 4px;
-  height: 20px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--progress-fill);
-  transition: width 0.3s ease;
-}
-
-.stats input, .xp input {
+.xp input {
   width: 60px;
   padding: 6px;
   background: var(--dark-bg);
@@ -275,6 +288,21 @@ nav button.active {
   border: 1px solid var(--text-gray);
   border-radius: 4px;
   text-align: center;
+}
+
+.progress-bar {
+  width: 100%;
+  background: var(--progress-bg);
+  border-radius: 4px;
+  height: 20px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--progress-fill);
+  transition: width 0.3s ease;
 }
 
 .xp button {
@@ -293,7 +321,7 @@ nav button.active {
   margin-bottom: 12px;
 }
 
-.inventory-tabs button {
+.inventory-tab-btn {
   background: none;
   border: none;
   color: var(--text-white);
@@ -302,7 +330,7 @@ nav button.active {
   padding: 6px;
 }
 
-.inventory-tabs button.active {
+.inventory-tab-btn.active {
   border-bottom: 2px solid var(--accent-blue);
 }
 
@@ -325,22 +353,52 @@ nav button.active {
   border: 0;
 }
 
-.inventory-form .dynamic-field, .spells-form .dynamic-field {
+.inventory-form .dynamic-field,
+.spells-form .dynamic-field {
   display: none;
 }
 
-.inventory-form .dynamic-field.active, .spells-form .dynamic-field.active {
+.inventory-form .dynamic-field.active,
+.spells-form .dynamic-field.active {
   display: block;
 }
 
-.inventory-item input[type="checkbox"] {
-  margin-left: 8px;
+.spell-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+  max-width: 100%;
+}
+
+.spell-slot-item {
+  background: var(--dark-panel);
+  padding: 8px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.spell-slot-item label {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.spell-slot-item input {
+  width: 40px;
+  font-size: 16pt;
+  text-align: center;
+  background: var(--dark-bg);
+  color: var(--text-white);
+  border: 1px solid var(--text-gray);
+  border-radius: 4px;
 }
 
 @media (max-width: 500px) {
   .abilities {
-    grid-template-columns: 1fr !important;
-    grid-template-areas: none;
+    grid-template-columns: 1fr;
+  }
+  .tab {
+    padding-bottom: 70px;
   }
 }
 
@@ -361,7 +419,6 @@ nav button.active {
   }
   .tab {
     padding: 8px;
-    padding-bottom: 70px;
   }
 }
 
