@@ -1,48 +1,10 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>D&D: Morgland</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
     --dark-bg: #1A1A1A;
@@ -744,6 +706,8 @@
   <button id="importBtn">Импорт JSON</button>
   <button onclick="clearLocalStorage()">Сброс данных</button>
   <input type="file" id="importInput" style="display:none;" accept=".json">
+  <label for="fileInput" class="sr-only">Загрузить Excel</label>
+  <input type="file" id="fileInput" accept=".xlsx" onchange="handleFileUpload(event)">
 </div>
 
 <nav>
@@ -756,6 +720,55 @@
 </nav>
 
 <script>
+var gk_isXlsx = false;
+var gk_xlsxFileLookup = {};
+var gk_fileData = {};
+
+function filledCell(cell) {
+  return cell !== '' && cell != null;
+}
+
+function loadFileData(filename) {
+  if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+    try {
+      var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+      var firstSheetName = workbook.SheetNames[0];
+      var worksheet = workbook.Sheets[firstSheetName];
+      var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+      var filteredData = jsonData.filter(row => row.some(filledCell));
+      var headerRowIndex = filteredData.findIndex((row, index) =>
+        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+      );
+      if (headerRowIndex === -1 || headerRowIndex > 25) {
+        headerRowIndex = 0;
+      }
+      var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+      csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+      return csv;
+    } catch (e) {
+      console.error(e);
+      return "";
+    }
+  }
+  return gk_fileData[filename] || "";
+}
+
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const data = e.target.result;
+      gk_fileData[file.name] = data.split(',')[1]; // Base64 часть
+      gk_xlsxFileLookup[file.name] = true;
+      gk_isXlsx = true;
+      console.log('Файл загружен:', file.name);
+      // Здесь можно добавить дополнительную обработку, если нужно
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
 // Tab switching
 function showTab(tabId) {
   console.log('Switching to tab:', tabId);
@@ -792,6 +805,7 @@ function limitContentLength(id, maxLength) {
 function validateHP() {
   const currentHP = parseInt(document.getElementById('currentHP').value) || 0;
   const maxHP = parseInt(document.getElementById('maxHP').value) || 0;
+  <!-- Продолжение от // Validate HP -->
   if (currentHP > maxHP) {
     document.getElementById('currentHP').value = maxHP;
   }
@@ -802,8 +816,6 @@ function validateHP() {
 
 // Experience and Level
 const levelXP = [0, 300, 900, 2700, 6500, 14000, 23000, 34000, 48000, 64000, 85000, 100000, 120000, 140000, 165000, 195000, 225000, 265000, 305000, 355000];
-// Альтернативная упрощённая таблица XP (в 2 раза меньше):
-// const levelXP = [0, 150, 450, 1350, 3250, 7000, 11500, 17000, 24000, 32000, 42500, 50000, 60000, 70000, 82500, 97500, 112500, 132500, 152500, 177500];
 function updateXP() {
   const currentXP = parseInt(document.getElementById('xpCurrent').value) || 0;
   const level = parseInt(document.getElementById('charLevel').textContent) || 1;
@@ -851,10 +863,10 @@ function updateModifier(stat) {
 
 // Update AC
 const armorBaseAC = {
-  leather: 11, // Лёгкая броня, + полный DEX
-  chainmail: 16, // Тяжёлая броня, без DEX
-  plate: 18, // Тяжёлая броня, без DEX
-  shield: 2 // Плоский бонус
+  leather: 11,
+  chainmail: 16,
+  plate: 18,
+  shield: 2
 };
 const materialModifiers = {
   leather: 0,
@@ -885,15 +897,12 @@ function updateAC() {
       const qualityBonus = qualityModifiers[item.quality] || 0;
       const extraBonus = parseInt(item.acBonus) || 0;
       if (item.subType === 'leather') {
-        // Лёгкая броня: полный бонус ловкости
         totalAC = Math.max(totalAC, baseAC + dexMod + materialBonus + qualityBonus + extraBonus);
         hasArmor = true;
       } else if (item.subType === 'chainmail') {
-        // Средняя броня: макс. +2 от ловкости
         totalAC = Math.max(totalAC, baseAC + Math.min(dexMod, 2) + materialBonus + qualityBonus + extraBonus);
         hasArmor = true;
       } else if (item.subType === 'plate') {
-        // Тяжёлая броня: без бонуса ловкости
         totalAC = Math.max(totalAC, baseAC + materialBonus + qualityBonus + extraBonus);
         hasArmor = true;
       } else if (item.subType === 'shield') {
@@ -971,18 +980,18 @@ document.querySelectorAll('.dice-button').forEach(btn => {
 
 // Avatar upload
 let avatarData = null;
-document.getElementById('avatarInput').addEventListener('change', function(e){
+document.getElementById('avatarInput').addEventListener('change', function(e) {
   const file = e.target.files[0];
-  if(file) {
+  if (file) {
     const reader = new FileReader();
-    reader.onload = function(ev){
+    reader.onload = function(ev) {
       avatarData = ev.target.result;
       document.getElementById('avatarPreview').style.backgroundImage = `url(${avatarData})`;
       saveToLocalStorage();
-    }
+    };
     reader.onerror = function() {
       alert('Ошибка загрузки изображения');
-    }
+    };
     reader.readAsDataURL(file);
   }
 });
@@ -1056,7 +1065,7 @@ function renderInventory() {
           if (equipCheckbox.checked) {
             if (item.type === 'armor') {
               const equippedArmors = inventory.filter(i => i.type === 'armor' && i.equipped && i !== item);
-              const maxArmors = item.subType === 'shield' ? 1 : 1; // Один щит или одна броня
+              const maxArmors = item.subType === 'shield' ? 1 : 1;
               if (equippedArmors.length >= maxArmors) {
                 alert(`Можно экипировать только ${item.subType === 'shield' ? 'один щит' : 'одну броню'}!`);
                 equipCheckbox.checked = false;
@@ -1322,17 +1331,20 @@ function saveToLocalStorage() {
 function loadFromLocalStorage() {
   try {
     const data = JSON.parse(localStorage.getItem('characterData') || '{}');
+    // Установка начальных значений, если данные отсутствуют
     document.getElementById('charName').textContent = data.name || 'Mell';
     document.getElementById('charRace').textContent = data.race || 'Tiefling';
     document.getElementById('charClass').textContent = data.class || 'Ranger';
     document.getElementById('charLevel').textContent = data.level || '1';
     document.getElementById('xpCurrent').value = data.xpCurrent || '0';
     document.getElementById('xpNext').value = data.xpNext || '300';
-    ['str','dex','con','int','wis','cha'].forEach(stat => {
+    ['str', 'dex', 'con', 'int', 'wis', 'cha'].forEach(stat => {
       if (data.abilities && data.abilities[stat] !== undefined) {
         document.getElementById(stat).value = data.abilities[stat];
-        updateModifier(stat);
+      } else {
+        document.getElementById(stat).value = 10; // Начальные значения
       }
+      updateModifier(stat);
     });
     document.getElementById('currentHP').value = data.currentHP || '10';
     document.getElementById('maxHP').value = data.maxHP || '10';
@@ -1343,11 +1355,15 @@ function loadFromLocalStorage() {
         const profId = skillMap[skill].profId;
         document.getElementById(profId).checked = data.skills[profId] || false;
       });
+    } else {
+      Object.keys(skillMap).forEach(skill => {
+        document.getElementById(skillMap[skill].profId).checked = false;
+      });
     }
     inventory = data.inventory || [];
     spells = data.spells || [];
     if (data.spellSlots) {
-      ['slot1','slot2','slot3','slot4','slot5','slot6','slot7','slot8','slot9'].forEach(slot => {
+      ['slot1', 'slot2', 'slot3', 'slot4', 'slot5', 'slot6', 'slot7', 'slot8', 'slot9'].forEach(slot => {
         document.getElementById(slot).value = data.spellSlots[slot] || '0';
       });
     }
