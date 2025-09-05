@@ -1332,9 +1332,9 @@ function loadFromLocalStorage() {
   try {
     const data = JSON.parse(localStorage.getItem('characterData') || '{}');
     // Установка начальных значений, если данные отсутствуют
-    document.getElementById('charName').textContent = data.name || 'Mell';
-    document.getElementById('charRace').textContent = data.race || 'Tiefling';
-    document.getElementById('charClass').textContent = data.class || 'Ranger';
+    document.getElementById('charName').textContent = data.name || 'Name';
+    document.getElementById('charRace').textContent = data.race || 'Race';
+    document.getElementById('charClass').textContent = data.class || 'Clas';
     document.getElementById('charLevel').textContent = data.level || '1';
     document.getElementById('xpCurrent').value = data.xpCurrent || '0';
     document.getElementById('xpNext').value = data.xpNext || '300';
@@ -1482,3 +1482,4 @@ document.getElementById('importInput').addEventListener('change', function(e) {
 </script>
 </body>
 </html>
+
