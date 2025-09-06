@@ -242,7 +242,6 @@
 .dice-button:focus { outline: 3px solid rgba(0,123,255,0.18); }
 .dice-button:hover { transform: translateY(-4%) scale(1.03); box-shadow: 4px 6px 14px rgba(0,0,0,0.45); }
 
-  }
   .inventory-item, .spell-item, .note-item {
     background: var(--dark-panel);
     padding: 8px;
@@ -443,6 +442,290 @@
       grid-template-columns: 1fr;
     }
   }
+
+  /* Улучшенные медиа-запросы для адаптивности */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 8px;
+  }
+  header h1 {
+    font-size: 18pt;
+  }
+  header .sub {
+    font-size: 10pt;
+  }
+  .stats {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .stats label {
+    margin: 4px 0;
+    width: 100%;
+    text-align: center;
+  }
+  .xp input {
+    width: 60px;
+    margin: 0 2px;
+  }
+  .abilities {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .skills, .spell-slots {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .dice-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+    gap: 8px;
+    justify-content: center;
+    max-width: 300px;
+    margin: 12px auto;
+  }
+  .dice-button {
+    width: 48px;
+    height: 48px;
+    font-size: 0.85rem;
+    padding: 0;
+  }
+  .dice-button > span {
+    font-size: 0.9rem;
+    width: 80%;
+    height: 80%;
+  }
+  .inventory-item, .spell-item, .note-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 4px;
+  }
+  .inventory-item button, .spell-item button, .note-item button {
+    margin: 4px 0 0;
+    width: 100%;
+  }
+  .inventory-form input, .inventory-form select, .spells-form input, .spells-form select, .notes-form input {
+    font-size: 14px;
+  }
+  .notes textarea, .spells-form textarea {
+    height: 150px;
+    font-size: 14px;
+  }
+  nav {
+    height: 50px;
+  }
+  nav button.nav-btn {
+    font-size: 12pt;
+    padding: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  header h1 {
+    font-size: 16pt;
+  }
+  header .sub {
+    font-size: 9pt;
+  }
+  .dice-row {
+    grid-template-columns: repeat(auto-fit, minmax(36px, 1fr));
+    max-width: 240px;
+  }
+  .dice-button {
+    width: 40px;
+    height: 40px;
+    font-size: 0.75rem;
+  }
+  .dice-button > span {
+    font-size: 0.8rem;
+  }
+  .tab {
+    padding-bottom: 60px;
+  }
+  nav {
+    height: 45px;
+  }
+  nav button.nav-btn {
+    font-size: 10pt;
+  }
+  .inventory-tabs {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .inventory-tabs button {
+    padding: 4px;
+    font-size: 10pt;
+  }
+  .avatar-preview {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+/* Общие улучшения для сенсорных экранов */
+@media (hover: none) and (pointer: coarse) {
+  .dice-button {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 6px;
+  }
+  .dice-button:hover {
+    transform: none;
+  }
+  button {
+    min-height: 40px;
+    font-size: 14px;
+  }
+  input, select, textarea {
+    font-size: 16px;
+    padding: 8px;
+  }
+}
+
+
+/* ===== УЛУЧШЕНИЯ ДЛЯ МОБИЛЬНЫХ ===== */
+
+/* Характеристики — в два столбца */
+@media (max-width: 768px) {
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+  .stats label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--dark-panel);
+    padding: 6px;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  .stats input {
+    max-width: 70px;
+    text-align: center;
+  }
+}
+
+/* Нижняя навигация — 2 ряда по 3 кнопки */
+@media (max-width: 480px) {
+  nav {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 4px 0;
+  }
+  nav button.nav-btn {
+    flex: 1 1 33%; /* 3 кнопки в строке */
+    font-size: 11pt;
+    padding: 6px 0;
+  }
+}
+
+/* ===== ФИКС СПОСОБНОСТЕЙ И КУБИКОВ ===== */
+
+/* Способности — 2 колонки даже на телефонах */
+@media (max-width: 768px) {
+  .abilities {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+  .ability-card {
+    padding: 10px;
+  }
+}
+
+/* Кубики — аккуратная адаптивная сетка */
+@media (max-width: 768px) {
+  .dice-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    gap: 8px;
+    justify-content: center;
+    max-width: 360px;
+    margin: 12px auto;
+  }
+  .dice-button {
+    width: 60px;
+    height: 60px;
+    font-size: 0.9rem;
+  }
+  .dice-button > span {
+    font-size: 0.85rem;
+  }
+}
+
+/* Для совсем маленьких экранов (<400px) */
+@media (max-width: 400px) {
+  .dice-row {
+    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+    max-width: 300px;
+  }
+  .dice-button {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+.tab {
+    display: none;
+    padding: 12px;
+    padding-bottom: 80px;
+    /* Увеличенный отступ снизу с учётом фиксированной навигации и safe-area */
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+    max-width: 100%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    text-align: center;
+  }
+
+  .dice-row {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  /* Отступ снизу, чтобы навигация не перекрывала кнопки дайсов на мобильных */
+  margin-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+/* В мобильных медиазапросах можно точнее подогнать значение */
+@media (max-width: 480px) {
+  nav {
+    height: 45px;
+  }
+  .tab { padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
+  .dice-row { margin-bottom: calc(60px + env(safe-area-inset-bottom)); }
+  header h1 {
+    font-size: 16pt;
+  }
+  header .sub {
+    font-size: 9pt;
+  }
+}
+
+@media (max-width: 480px) {
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    height: auto; /* позволяет две строки */
+    padding: 4px 0;
+    z-index: 9999;
+  }
+  nav button.nav-btn {
+    flex: 1 1 33%;
+    min-width: 0;
+    padding: 6px 4px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11pt; /* при необходимости уменьшить */
+  }
+}
+
 </style>
 </head>
 <body onload="loadFromLocalStorage(); initializeTabs();">
@@ -465,8 +748,8 @@
     <div class="stats">
       <label>Текущее HP: <input type="number" min="0" max="999" id="currentHP" value="10" oninput="validateHP(); saveToLocalStorage()"></label>
       <label>Макс. HP: <input type="number" min="0" max="999" id="maxHP" value="10" oninput="validateHP(); saveToLocalStorage()"></label>
-      <label>AC: <input type="number" min="0" max="50" id="ac" value="15" readonly></label>
-      <label>Proficiency Bonus: <input type="number" min="2" max="6" id="profBonus" value="2" readonly></label>
+      <label>Класс Брони: <input type="number" min="0" max="50" id="ac" value="15" readonly></label>
+      <label>Бонус Мастерства: <input type="number" min="2" max="6" id="profBonus" value="2" readonly></label>
     </div>
     <h2>Опыт</h2>
     <div class="xp">
