@@ -162,71 +162,86 @@
     margin-right: 8px;
   }
   .dice-row {
-    margin-top: 12px;
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    max-width: 100%;
-  }
-  .dice-button {
-    background: linear-gradient(135deg, #e0e0e0, #ffffff);
-    color: #333;
-    border: 2px solid #ccc;
-    margin: 4px;
-    font-weight: bold;
-    font-size: 14pt;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-    text-align: center;
-    padding: 8px;
-    border-radius: 4px; /* Добавлен радиус для мягкости */
-  }
-  .dice-button[data-dice="4"] {
-    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-    width: 50px;
-    height: 50px;
-    line-height: 20px;
-  }
-  .dice-button[data-dice="6"] {
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-    width: 50px;
-    height: 50px;
-    line-height: 20px;
-  }
-  .dice-button[data-dice="8"] {
-    clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
-    width: 60px;
-    height: 60px;
-    line-height: 25px;
-  }
-  .dice-button[data-dice="10"] {
-    clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
-    width: 60px;
-    height: 60px;
-    line-height: 25px;
-  }
-  .dice-button[data-dice="12"] {
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    width: 60px;
-    height: 60px;
-    line-height: 25px;
-  }
-  .dice-button[data-dice="20"] {
-    clip-path: polygon(50% 0%, 90% 20%, 100% 60%, 75% 100%, 25% 100%, 0% 60%, 10% 20%);
-    width: 70px;
-    height: 70px;
-    line-height: 30px;
-  }
-  .dice-button[data-dice="100"] {
-    clip-path: polygon(50% 0%, 80% 10%, 100% 35%, 100% 70%, 80% 90%, 50% 100%, 20% 90%, 0% 70%, 0% 35%, 20% 10%);
-    width: 80px;
-    height: 80px;
-    line-height: 35px;
-  }
-  .dice-button:hover {
-    transform: scale(1.1);
-    box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.5);
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.dice-button {
+  background: linear-gradient(135deg, #f0f0f0, #ffffff);
+  color: #111;
+  border: 2px solid #cfcfcf;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.35);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  user-select: none;
+  width: 64px;
+  height: 64px;
+  line-height: 1;
+  border-radius: 8px; /* для кубиков с clip-path это не сильно заметно */
+}
+
+/* Размеры подобраны так, чтобы формы имели близкую площадь */
+.dice-button[data-dice="4"]  { clip-path: polygon(50% 0%, 100% 100%, 0% 100%); width:52px; height:52px; }
+.dice-button[data-dice="6"]  { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); width:52px; height:52px; border-radius:6px; }
+.dice-button[data-dice="8"]  { clip-path: polygon(50% 0%, 88% 33%, 66% 100%, 34% 100%, 12% 33%); width:56px; height:56px; }
+.dice-button[data-dice="10"] {
+  clip-path: polygon(
+    50% 0%, 78% 9%, 94% 30%, 90% 60%, 70% 92%,
+    50% 100%, 30% 92%, 10% 60%, 6% 30%, 22% 9%
+  );
+  width:60px; height:60px;
+}
+.dice-button[data-dice="12"] {
+  clip-path: polygon(
+    50% 0%, 68% 6%, 84% 20%, 94% 38%, 98% 58%, 91% 76%,
+    76% 90%, 50% 100%, 24% 90%, 9% 76%, 2% 58%, 6% 38%, 16% 20%, 32% 6%
+  );
+  width:64px; height:64px;
+}
+.dice-button[data-dice="20"] {
+  clip-path: polygon(
+    50% 0%, 66% 8%, 80% 22%, 92% 38%, 98% 56%, 90% 74%,
+    76% 88%, 50% 100%, 24% 88%, 10% 74%, 2% 56%, 8% 38%, 20% 22%, 34% 8%
+  );
+  width:68px; height:68px;
+}
+.dice-button[data-dice="100"] {
+  clip-path: circle(50% at 50% 50%);
+  width:76px; height:76px;
+  border-radius:50%;
+}
+
+/* Гарантируем центровку текста и защиту от обрезки */
+.dice-button > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 84%;
+  height: 84%;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 800;
+  color: #222;
+  font-size: 0.98rem;
+}
+
+/* Фокус и hover */
+.dice-button:focus { outline: 3px solid rgba(0,123,255,0.18); }
+.dice-button:hover { transform: translateY(-4%) scale(1.03); box-shadow: 4px 6px 14px rgba(0,0,0,0.45); }
+
   }
   .inventory-item, .spell-item, .note-item {
     background: var(--dark-panel);
@@ -527,13 +542,13 @@
       <option value="persuasion">Убеждение</option>
     </select>
     <div class="dice-row">
-      <button class="dice-button" data-dice="4">D4</button>
-      <button class="dice-button" data-dice="6">D6</button>
-      <button class="dice-button" data-dice="8">D8</button>
-      <button class="dice-button" data-dice="10">D10</button>
-      <button class="dice-button" data-dice="12">D12</button>
-      <button class="dice-button" data-dice="20">D20</button>
-      <button class="dice-button" data-dice="100">D100</button>
+      <button class="dice-button" data-dice="4"><span>D4</span></button>
+      <button class="dice-button" data-dice="6"><span>D6</span></button>
+      <button class="dice-button" data-dice="8"><span>D8</span></button>
+      <button class="dice-button" data-dice="10"><span>D10</span></button>
+      <button class="dice-button" data-dice="12"><span>D12</span></button>
+      <button class="dice-button" data-dice="20"><span>D20</span></button>
+      <button class="dice-button" data-dice="100"><span>D100</span></button>
     </div>
     <div id="diceResult" style="margin-top:12px;text-align:center;font-size:16pt;white-space:pre-wrap;"></div>
   </div>
@@ -1483,19 +1498,36 @@ function updateSkills() {
 // Броски кубиков
 document.querySelectorAll('.dice-button').forEach(button => {
   button.addEventListener('click', () => {
-    const dice = parseInt(button.getAttribute('data-dice'));
-    const ability = document.getElementById('diceAbility').value;
+    const dice = parseInt(button.getAttribute('data-dice'), 10) || 6;
+    const abilityEl = document.getElementById('diceAbility');
+    const ability = abilityEl ? abilityEl.value : 'none';
     let modifier = 0;
+
     if (ability !== 'none') {
-      const modElement = document.getElementById(`${ability}Mod`) || document.getElementById(`${ability}Bonus`);
-      modifier = parseInt(modElement.textContent.split('+')[1]) || 0;
-      if (ability.endsWith('Prof') && !document.getElementById(ability.replace('Prof', '')).checked) {
+      const modEl = document.getElementById(`${ability}Mod`) || document.getElementById(`${ability}Bonus`);
+      if (modEl && typeof modEl.textContent === 'string') {
+        const m = modEl.textContent.match(/-?\d+/);
+        modifier = m ? parseInt(m[0], 10) : 0;
+      } else {
         modifier = 0;
       }
     }
-    const roll = Math.floor(Math.random() * dice) + 1;
+
+    // Генерация броска — crypto.getRandomValues если доступен, иначе Math.random
+    let roll;
+    if (window.crypto && window.crypto.getRandomValues) {
+      const r = new Uint32Array(1);
+      window.crypto.getRandomValues(r);
+      roll = (r[0] % dice) + 1;
+    } else {
+      roll = Math.floor(Math.random() * dice) + 1;
+    }
+
     const total = roll + modifier;
-    document.getElementById('diceResult').textContent = `Результат: ${roll} + ${modifier} = ${total}\n(Кубик: D${dice}, модификатор: ${ability !== 'none' ? ability : 'нет'})`;
+    const resEl = document.getElementById('diceResult');
+    if (resEl) {
+      resEl.textContent = `Результат: ${roll} + ${modifier} = ${total}\n(Кубик: D${dice}, модификатор: ${ability !== 'none' ? ability : 'нет'})`;
+    }
   });
 });
 
