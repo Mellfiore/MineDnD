@@ -1,9 +1,7 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
+<html lang="ru"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>D&D: Morgland</title>
+<title>D&amp;D: Morgland</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
@@ -726,6 +724,102 @@
   }
 }
 
+/* ---------- Исправления: слоты, заметки и инвентарь ---------- */
+/* Принудительные 2 колонки для слотов заклинаний (адаптивно) */
+.spell-slots {
+  grid-template-columns: repeat(2, minmax(120px, 1fr)) !important;
+  gap: 8px;
+  max-width: 520px;
+  margin: 8px auto;
+}
+
+/* Заметки: форма заметок выше списка и не перекрывается вкладками */
+.notes-form {
+  position: relative;
+  z-index: 30;
+  background: var(--dark-panel);
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+  margin-bottom: 10px;
+}
+#notesList { margin-bottom: 10px; }
+#generalNotes {
+  display: block;
+  margin-top: 12px;
+  min-height: 120px;
+  padding: 10px;
+  box-sizing: border-box;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  color: var(--text-white);
+  z-index: 1;
+}
+
+/* Инвентарь: вкладки остаются в потоке, а форма — над ними */
+.inventory-tabs {
+  position: relative;   /* в потоке документа — не перекрывает форму */
+  z-index: 1;           /* ниже, чем форма */
+  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;   /* освобождает место под вкладки */
+  background: transparent;
+  padding: 6px 0;
+}
+.inventory-tabs button {
+  background: none;
+  border: none;
+  color: var(--text-white);
+  font-size: 12pt;
+  cursor: pointer;
+  padding: 6px;
+  margin: 4px;
+}
+.inventory-tabs button.active {
+  border-bottom: 2px solid var(--accent-blue);
+}
+
+/* Форма инвентаря — выше по z-index, чтобы не перекрывалась вкладками */
+.inventory-form {
+  position: relative;
+  z-index: 50; /* выше вкладок */
+  margin-top: 8px;
+  padding: 12px;
+  background: var(--dark-panel);
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+
+/* Мобильные уточнения */
+@media (max-width: 480px) {
+  .spell-slots { gap: 6px; max-width: 360px; }
+  .inventory-tabs { gap: 6px; margin-bottom: 6px; }
+  .inventory-tabs button { flex: 1 1 48%; min-width: 0; padding: 6px 8px; font-size: 10pt; }
+  .inventory-form { padding-top: 12px; margin-bottom: calc(60px + env(safe-area-inset-bottom)); }
+  .notes-form { padding: 8px; }
+  #generalNotes { min-height: 100px; }
+}
+
+/* Даем дополнительный внутренний отступ контейнеру вкладки заметок */
+#tabNotes .container {
+  padding-bottom: calc(120px + env(safe-area-inset-bottom)) !important;
+}
+
+/* Немного увеличим высоту поля общих заметок и отступ внизу */
+#tabNotes #generalNotes {
+  min-height: 160px;
+  margin-bottom: calc(96px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+/* Дополнительные отступы между формой, списком и общими заметками */
+#tabNotes .notes-form { margin-bottom: 12px; }
+#tabNotes #notesList { margin-bottom: 12px; }
+
 </style>
 </head>
 <body onload="loadFromLocalStorage(); initializeTabs();">
@@ -734,29 +828,29 @@
   <div class="avatar-preview" id="avatarPreview" role="img" aria-label="Персонаж"></div>
   <label for="avatarInput" class="sr-only">Загрузить аватар</label>
   <input type="file" id="avatarInput" accept="image/*">
-  <h1 contenteditable="true" id="charName" oninput="limitContentLength('charName', 50); saveToLocalStorage()">Имя персонажа</h1>
+  <h1 contenteditable="true" id="charName" oninput="limitContentLength('charName', 50); saveToLocalStorage()" onkeydown="preventEnter(event)">Имя персонажа</h1>
   <div class="sub">
-    Раса: <span contenteditable="true" id="charRace" oninput="limitContentLength('charRace', 30); saveToLocalStorage()">Раса</span> |
-    Класс: <span contenteditable="true" id="charClass" oninput="limitContentLength('charClass', 30); saveToLocalStorage()">Класс</span> |
-    Уровень: <span contenteditable="true" id="charLevel" oninput="limitContentLength('charLevel', 3); saveToLocalStorage()">1</span>
+    Раса: <span contenteditable="true" id="charRace" oninput="limitContentLength('charRace', 30); saveToLocalStorage()" onkeydown="preventEnter(event)">Раса</span> |
+    Класс: <span contenteditable="true" id="charClass" oninput="limitContentLength('charClass', 30); saveToLocalStorage()" onkeydown="preventEnter(event)">Класс</span> |
+    Уровень: <span contenteditable="true" id="charLevel" oninput="limitContentLength('charLevel', 3); saveToLocalStorage()" onkeydown="handleLevelInput(event)">1</span>
   </div>
 </header>
 
-<div class="tab active-tab" id="tabCharacter">
+<div class="tab" id="tabCharacter">
   <div class="container">
     <h2>Характеристики</h2>
     <div class="stats">
       <label>Текущее HP: <input type="number" min="0" max="999" id="currentHP" value="10" oninput="validateHP(); saveToLocalStorage()"></label>
       <label>Макс. HP: <input type="number" min="0" max="999" id="maxHP" value="10" oninput="validateHP(); saveToLocalStorage()"></label>
-      <label>Класс Брони: <input type="number" min="0" max="50" id="ac" value="15" readonly></label>
-      <label>Бонус Мастерства: <input type="number" min="2" max="6" id="profBonus" value="2" readonly></label>
+      <label>Класс Брони: <input type="number" min="0" max="50" id="ac" value="15" readonly=""></label>
+      <label>Бонус Мастерства: <input type="number" min="2" max="6" id="profBonus" value="2" readonly=""></label>
     </div>
     <h2>Опыт</h2>
     <div class="xp">
       <label for="xpCurrent">Текущий XP</label>
       <input type="number" min="0" id="xpCurrent" value="0" oninput="updateXP(); saveToLocalStorage()">
       <label for="xpNext">XP до следующего уровня</label>
-      <input type="number" min="0" id="xpNext" value="300" readonly>
+      <input type="number" min="0" id="xpNext" value="300" readonly="">
       <div class="progress-bar">
         <div class="progress-fill" id="xpProgress" style="width:0%"></div>
       </div>
@@ -792,7 +886,7 @@
       </div>
       <div class="ability-card">
         <label for="cha">Харизма</label>
-        <input type="number" min="1" max="30" value="10" id="cha" oninput="updateModifier('cha'); updateSkills(); saveToLocalStorage()">
+        <input type="number" min="1" max="30" value="10" id="cha" oninput="updateModifier('cha'); saveToLocalStorage()">
         <span id="chaMod">Mod: +0</span>
       </div>
     </div>
@@ -935,7 +1029,7 @@
   </div>
 </div>
 
-<div class="tab" id="tabInventory">
+<div class="tab active-tab" id="tabInventory">
   <div class="container">
     <h2>Инвентарь</h2>
     <div class="inventory-tabs">
@@ -976,8 +1070,8 @@
         <option value="ranged">Дальний бой</option>
         <option value="magic">Магическое</option>
       </select>
-      <label for="armorSubType" class="dynamic-field" id="armorSubTypeField">Тип брони</label>
-      <select id="armorSubType" class="dynamic-field" onchange="updateArmorMaterialOptions()">
+      <label for="armorSubType" class="dynamic-field active" id="armorSubTypeField">Тип брони</label>
+      <select id="armorSubType" class="dynamic-field active" onchange="updateArmorMaterialOptions()">
         <option value="helmet">Шлем</option>
         <option value="chestplate">Нагрудник</option>
         <option value="leggings">Поножи</option>
@@ -985,17 +1079,10 @@
         <option value="gloves">Перчатки</option>
         <option value="shield">Щит</option>
       </select>
-      <label for="armorMaterial" class="dynamic-field" id="armorMaterialField">Материал брони</label>
-      <select id="armorMaterial" class="dynamic-field">
-        <option value="leather">Кожа</option>
-        <option value="studdedLeather">Укреплённая кожа</option>
-        <option value="steel">Сталь</option>
-        <option value="mithral">Мифрил</option>
-        <option value="adamantine">Адамантин</option>
-        <option value="dragonScale">Драконья чешуя</option>
-      </select>
-      <label for="itemQuality" class="dynamic-field" id="itemQualityField">Качество</label>
-      <select id="itemQuality" class="dynamic-field">
+      <label for="armorMaterial" class="dynamic-field active" id="armorMaterialField">Материал брони</label>
+      <select id="armorMaterial" class="dynamic-field active"><option value="leather">Кожа</option><option value="studdedLeather">Укреплённая кожа</option><option value="steel">Сталь</option><option value="mithral">Мифрил</option><option value="adamantine">Адамантит</option><option value="dragonScale">Драконья чешуя</option></select>
+      <label for="itemQuality" class="dynamic-field active" id="itemQualityField">Качество</label>
+      <select id="itemQuality" class="dynamic-field active">
         <option value="common">Обычное</option>
         <option value="uncommon">Необычное</option>
         <option value="rare">Редкое</option>
@@ -1016,14 +1103,14 @@
         <option value="earrings">Серьги</option>
         <option value="cloak">Плащ</option>
       </select>
-      <label for="acBonus" class="dynamic-field" id="acBonusField">Дополнительный бонус AC</label>
-      <input type="number" min="0" max="3" id="acBonus" class="dynamic-field" placeholder="Бонус AC">
+      <label for="acBonus" class="dynamic-field active" id="acBonusField">Дополнительный бонус AC</label>
+      <input type="number" min="0" max="3" id="acBonus" class="dynamic-field active" placeholder="Бонус AC">
       <label for="energy" class="dynamic-field" id="energyField">Восстановление HP</label>
-      <input type="number" min="0" max="100" id="energy" class="dynamic-field" placeholder="Восстановление HP" required>
+      <input type="number" min="0" max="100" id="energy" class="dynamic-field" placeholder="Восстановление HP" required="">
       <label for="quantity" class="dynamic-field" id="quantityField">Количество</label>
-      <input type="number" min="0" max="999" id="quantity" class="dynamic-field" placeholder="Количество" required>
+      <input type="number" min="0" max="999" id="quantity" class="dynamic-field" placeholder="Количество" required="">
       <label for="magicEffect" class="dynamic-field" id="magicEffectField">Магический эффект</label>
-      <select id="magicEffect" class="dynamic-field" required>
+      <select id="magicEffect" class="dynamic-field" required="">
         <option value="">Выберите эффект</option>
         <option value="+1 к AC">+1 к AC</option>
         <option value="+1 к Силе">+1 к Силе</option>
@@ -1147,7 +1234,7 @@
 <nav>
   <button class="nav-btn" onclick="showTab('tabCharacter')">Персонаж</button>
   <button class="nav-btn" onclick="showTab('tabSkills')">Навыки</button>
-  <button class="nav-btn" onclick="showTab('tabInventory')">Инвентарь</button>
+  <button class="nav-btn active" onclick="showTab('tabInventory')">Инвентарь</button>
   <button class="nav-btn" onclick="showTab('tabSpells')">Заклинания</button>
   <button class="nav-btn" onclick="showTab('tabNotes')">Заметки</button>
   <button class="nav-btn" onclick="showTab('tabSettings')">Настройки</button>
@@ -1948,5 +2035,6 @@ document.getElementById('charRace').setAttribute('onkeydown', 'preventEnter(even
 document.getElementById('charClass').setAttribute('onkeydown', 'preventEnter(event)');
 document.getElementById('charLevel').setAttribute('onkeydown', 'handleLevelInput(event)');
 </script>
+
 </body>
 </html>
